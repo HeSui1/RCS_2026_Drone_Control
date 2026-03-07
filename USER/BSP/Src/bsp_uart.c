@@ -144,7 +144,8 @@ static void USER_USART5_RxHandler(UART_HandleTypeDef *huart,uint16_t Size){
 				  /* Juge whether size is equal to the length of the received data */
 					if(Size == SBUS_RX_BUF_NUM)
 					{
-					
+						
+						SCB_InvalidateDCache_by_Addr((uint32_t *)SBUS_MultiRx_Buf[0], 32);
 						/* Memory 0 data update to remote_ctrl*/
 						SBUS_TO_RC(SBUS_MultiRx_Buf[0],&remote_ctrl);
 					
@@ -164,6 +165,7 @@ static void USER_USART5_RxHandler(UART_HandleTypeDef *huart,uint16_t Size){
 
 					if(Size == SBUS_RX_BUF_NUM)
 					{
+						SCB_InvalidateDCache_by_Addr((uint32_t *)SBUS_MultiRx_Buf[1], 32);
 						/* Memory 1 to data update to remote_ctrl*/
 						SBUS_TO_RC(SBUS_MultiRx_Buf[1],&remote_ctrl);
 					}

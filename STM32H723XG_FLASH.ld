@@ -240,7 +240,15 @@ SECTIONS
     . = ALIGN(8);
   } >DTCMRAM
 
-
+/* ================== 新增：强行映射 AXI_SRAM 区域 ================== */
+  .axi_sram_section (NOLOAD) :
+  {
+    . = ALIGN(32);      /* 强制 32 字节对齐，迎合 Cache */
+    *(.AXI_SRAM)        /* 捕获 C 代码中指定的 .AXI_SRAM 段 */
+    *(.AXI_SRAM*)
+    . = ALIGN(32);
+  } >RAM_D1             /* 核心：把它分配到真实的 RAM_D1 物理内存中！ */
+  /* ================================================================== */
 
   /* Remove information from the standard libraries */
   /DISCARD/ :

@@ -18,7 +18,7 @@ RC_ctrl_t rc_data = {0};
 /**
  * @brief remote control usart RxDMA MultiBuffer
  */
-__attribute__((section (".AXI_SRAM"))) uint8_t SBUS_MultiRx_Buf[2][SBUS_RX_BUF_NUM];
+__attribute__((section (".AXI_SRAM"), aligned(32))) uint8_t SBUS_MultiRx_Buf[2][32];
  
 /* Private variables ---------------------------------------------------------*/
 /**

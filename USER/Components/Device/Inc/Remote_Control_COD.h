@@ -214,7 +214,7 @@ extern Remote_Info_Typedef remote_ctrl;
 /**
  * @brief remote control usart RxDMA MultiBuffer
  */
-extern uint8_t SBUS_MultiRx_Buf[2][SBUS_RX_BUF_NUM];
+extern uint8_t SBUS_MultiRx_Buf[2][32];
 //
 // /* Mouse Exported defines -----------------------------------------------------*/
 // #define MOUSE_X_MOVE_SPEED    (remote_ctrl.mouse.x )

@@ -146,7 +146,7 @@ void GimbalInit()
 /* 机器人云台控制核心任务,后续考虑只保留IMU控制,不再需要电机的反馈 */
 void GimbalTask()
 {
-		pitch_target_rad =pitch_dm_motor->Data.Position+(gimbal_cmd_recv.pitch * 0.0174533f-gimba_IMU_data->Pitch * 0.0174533f);// gimbal_cmd_recv.pitch * 0.0174533f  ;//-(gimba_IMU_data->Pitch * 0.0174533f-pitch_dm_motor->Data.Position);
+		pitch_target_rad =pitch_dm_motor->Data.Position-(gimbal_cmd_recv.pitch * -0.0174533f-gimba_IMU_data->Pitch * 0.0174533f);// gimbal_cmd_recv.pitch * 0.0174533f  ;//-(gimba_IMU_data->Pitch * 0.0174533f-pitch_dm_motor->Data.Position);
     // 获取云台控制数据
     // 后续增加未收到数据的处理
     SubGetMessage(gimbal_sub, &gimbal_cmd_recv);

@@ -14,7 +14,7 @@ set(CMAKE_C_EXTENSIONS ON)
 
 # 定义 Build Type (默认为 Debug)
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "Debug")
+    set(CMAKE_BUILD_TYPE "Release")
 endif()
 message("Build type: " ${CMAKE_BUILD_TYPE})
 
@@ -95,8 +95,6 @@ if(NOT EXISTS ${LINKER_SCRIPT})
 endif()
 
 target_link_options(${CMAKE_PROJECT_NAME} PRIVATE
-        # 核心修复：指定链接脚本
-        -T ${LINKER_SCRIPT}
 
         # 生成 Map 文件
         -Wl,-Map=${CMAKE_PROJECT_NAME}.map
