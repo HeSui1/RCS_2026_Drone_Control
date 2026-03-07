@@ -96,6 +96,7 @@ endif()
 
 target_link_options(${CMAKE_PROJECT_NAME} PRIVATE
 
+        -T${LINKER_SCRIPT}
         # 生成 Map 文件
         -Wl,-Map=${CMAKE_PROJECT_NAME}.map
 

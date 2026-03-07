@@ -154,8 +154,8 @@ static void RemoteControlSet()
 
         // 2. 将视觉下发的 target 角度直接赋给云台 cmd
         // 这里的逻辑假设视觉下发的是“绝对目标角度”。
-        gimbal_cmd_send.yaw = vision_rx_data.yaw;
-        gimbal_cmd_send.pitch = vision_rx_data.pitch;
+        gimbal_cmd_send.yaw = vision_rx_data.yaw*57.29578;
+        gimbal_cmd_send.pitch = vision_rx_data.pitch*57.29578;
         
         // 待开发项提醒：视觉包里还有 yaw_vel, pitch_vel (前馈速度)
         // 目前你的 gimbal_cmd_send 结构体里只有 yaw 和 pitch。
