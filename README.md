@@ -1,4 +1,4 @@
-# 2025RoboMaster辽宁科技大学COD战队电控通用控制系统(达妙MC02 STM32H723VGT6)
+# 2026RoboMaster厦门大学RCS战队空中机器人电控控制系统(达妙MC02 STM32H723VGT6)
 
 ## **1** **简介**
 
@@ -10,6 +10,4 @@
 
 编译工具：Arm Compiler V6.19，C/C++编译
 
-剩下内容请阅读[README.pdf](./README.pdf)
-
-![](.\ad140e9c0190149d99c92ce133efdfd.jpg)
+基于辽宁科技大学COD战队的BSP基础，参照湖南大学跃鹿战队软件架构进行重构，实现了空中机器人电控控制系统的基本功能。
