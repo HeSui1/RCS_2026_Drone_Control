@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.36227.6
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{803FD0C6-D64E-4E16-9DC3-1DAEC859A3D2}") = "RCS_Drone_H7_01", "RCS_Drone_H7_01.vgdbcmake", "{81C00485-DC17-4554-AEB6-7A85E1B34A3F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|VisualGDB = Debug|VisualGDB
+		MinSizeRel|VisualGDB = MinSizeRel|VisualGDB
+		Release|VisualGDB = Release|VisualGDB
+		RelWithDebInfo|VisualGDB = RelWithDebInfo|VisualGDB
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{81C00485-DC17-4554-AEB6-7A85E1B34A3F}.Debug|VisualGDB.ActiveCfg = Debug|VisualGDB
+		{81C00485-DC17-4554-AEB6-7A85E1B34A3F}.Debug|VisualGDB.Build.0 = Debug|VisualGDB
+		{81C00485-DC17-4554-AEB6-7A85E1B34A3F}.MinSizeRel|VisualGDB.ActiveCfg = MinSizeRel|VisualGDB
+		{81C00485-DC17-4554-AEB6-7A85E1B34A3F}.MinSizeRel|VisualGDB.Build.0 = MinSizeRel|VisualGDB
+		{81C00485-DC17-4554-AEB6-7A85E1B34A3F}.Release|VisualGDB.ActiveCfg = Release|VisualGDB
+		{81C00485-DC17-4554-AEB6-7A85E1B34A3F}.Release|VisualGDB.Build.0 = Release|VisualGDB
+		{81C00485-DC17-4554-AEB6-7A85E1B34A3F}.RelWithDebInfo|VisualGDB.ActiveCfg = RelWithDebInfo|VisualGDB
+		{81C00485-DC17-4554-AEB6-7A85E1B34A3F}.RelWithDebInfo|VisualGDB.Build.0 = RelWithDebInfo|VisualGDB
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BBF2E045-171B-497D-A612-657BDE071862}
+	EndGlobalSection
+EndGlobal

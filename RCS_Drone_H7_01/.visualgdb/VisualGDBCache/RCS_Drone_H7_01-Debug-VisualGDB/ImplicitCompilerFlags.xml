@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<ImplicitFlagCache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <GCC>c:\sysgcc\arm-eabi\bin\arm-none-eabi-gcc.exe</GCC>
+  <GXX>c:\sysgcc\arm-eabi\bin\arm-none-eabi-g++.exe</GXX>
+  <CachedFlags>
+    <Entry>
+      <Key>
+        <IsCXX>false</IsCXX>
+        <Arguments> -mfloat-abi=hard -mthumb -Wall -std=gnu11</Arguments>
+      </Key>
+      <Specs>
+        <RawIncludeDirs />
+        <RawLibraryPaths />
+        <ForcedIncludeFiles />
+        <PreprocessorMacros />
+      </Specs>
+    </Entry>
+    <Entry>
+      <Key>
+        <IsCXX>true</IsCXX>
+        <Arguments> -mfloat-abi=hard -mthumb</Arguments>
+      </Key>
+      <Specs>
+        <RawIncludeDirs />
+        <RawLibraryPaths />
+        <ForcedIncludeFiles />
+        <PreprocessorMacros />
+      </Specs>
+    </Entry>
+  </CachedFlags>
+</ImplicitFlagCache>
