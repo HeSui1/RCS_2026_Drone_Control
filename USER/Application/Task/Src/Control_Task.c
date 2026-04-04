@@ -128,40 +128,32 @@ static void RemoteControlSet()
     // ========================================================
     // 1. 控制运行模式设定 (右侧开关)
     // ========================================================
-    if (switch_is_down(rc_data.rc.switch_right)) // 右侧开关状态[下], 陀螺仪模式(底盘跟随)
+    if (switch_is_down(rc_data.rc.switch_right)) //右侧开关[下]: 摩擦轮常开，云台受控
     {
-        // chassis_cmd_send.chassis_mode = CHASSIS_ROTATE;
-        gimbal_cmd_send.gimbal_mode = GIMBAL_GYRO_MODE;
+				gimbal_cmd_send.gimbal_mode = GIMBAL_GYRO_MODE;
+        shoot_cmd_send.friction_mode = FRICTION_ON;
     }
-    else if (switch_is_mid(rc_data.rc.switch_right)) // 右侧开关状态[中], 手动编码器模式(底盘分离)
+    else if (switch_is_mid(rc_data.rc.switch_right)) // 右侧开关[中]: 摩擦轮关闭，云台受控
     {
-        // chassis_cmd_send.chassis_mode = CHASSIS_NO_FOLLOW;
-        gimbal_cmd_send.gimbal_mode = GIMBAL_FREE_MODE;
+				gimbal_cmd_send.gimbal_mode = GIMBAL_GYRO_MODE; 
+        shoot_cmd_send.friction_mode = FRICTION_OFF;
+			
     }
-		else if (switch_is_up(rc_data.rc.switch_right)) // 【新增】右侧开关[上]: 解锁后的安全待机状态
+		else if (switch_is_up(rc_data.rc.switch_right)) // 右侧开关[上]: 安全待机状态 (云台掉电，摩擦轮关)
     {
-        // 解锁了，但不出力，充当缓冲和保护档位
-        gimbal_cmd_send.gimbal_mode = GIMBAL_ZERO_FORCE; 
+       gimbal_cmd_send.gimbal_mode = GIMBAL_ZERO_FORCE;
+			 shoot_cmd_send.friction_mode = FRICTION_OFF;			
     }
 
-    // ========================================================
-    // 3. 云台摇杆控制与软件限位 (左侧开关)
-    // ========================================================
+
     if (switch_is_mid(rc_data.rc.switch_left)) // 左侧开关状态[中], 视觉模式
     {
 // 1. 强制云台进入陀螺仪模式 (视觉通常需要世界坐标系下的绝对角度)
         gimbal_cmd_send.gimbal_mode = GIMBAL_GYRO_MODE;
 
-        // 2. 将视觉下发的 target 角度直接赋给云台 cmd
-        // 这里的逻辑假设视觉下发的是“绝对目标角度”。
         gimbal_cmd_send.yaw = vision_rx_data.yaw*57.29578;
         gimbal_cmd_send.pitch = vision_rx_data.pitch*57.29578;
         
-        // 待开发项提醒：视觉包里还有 yaw_vel, pitch_vel (前馈速度)
-        // 目前你的 gimbal_cmd_send 结构体里只有 yaw 和 pitch。
-        // 等基础闭环跑通后，你可以把前馈速度也传进结构体，在 GimbalTask 里直接叠加到内环速度环上！
-
-        // 3. 视觉模式同样需要软件限位！防止视觉抽风算出个 90 度把线扯断
         float pitch_max_limit = 17.f;  // 约仰角 17 度
         float pitch_min_limit = -17.f; // 约俯角 17 度
         if (gimbal_cmd_send.pitch > pitch_max_limit) 
@@ -173,7 +165,6 @@ static void RemoteControlSet()
             gimbal_cmd_send.pitch = pitch_min_limit;
         }
 
-        // 4. 视觉自动开火逻辑
         // 上位机 mode: 0: 不控制, 1: 控制云台不开火, 2: 控制云台且开火
         if (vision_rx_data.mode == 2) 
         {
@@ -188,12 +179,12 @@ static void RemoteControlSet()
     else if (switch_is_down(rc_data.rc.switch_left)) // 左侧开关状态[下], 纯遥控器手动控制
     { 
         // 摇杆增量叠加（在刚才对齐的基础上缓慢增加目标角度）
-        gimbal_cmd_send.yaw += 0.0005f * (float)rc_data.rc.rocker_l_;
-        gimbal_cmd_send.pitch += 0.0005f * (float)rc_data.rc.rocker_l1;
+        gimbal_cmd_send.yaw += 0.0002f * (float)rc_data.rc.rocker_l_;
+        gimbal_cmd_send.pitch += 0.0002f * (float)rc_data.rc.rocker_l1;
         
         // Pitch 轴软件限位 (极其重要，防止摇杆一直推把云台线扯断)
-        float pitch_max_limit = 17.f;  // 约仰角 17 度
-        float pitch_min_limit = -17.f; // 约俯角 17 度
+        float pitch_max_limit = 11.f; 
+        float pitch_min_limit = -18.f; 
         
         if (gimbal_cmd_send.pitch > pitch_max_limit) 
         {
@@ -205,32 +196,64 @@ static void RemoteControlSet()
         }
     }
 
-    // ========================================================
-    // 4. 底盘控制数据设定 (预留)
-    // ========================================================
-    // chassis_cmd_send.vx = 10.0f * (float)rc_data[TEMP].rc.rocker_r_; // 水平方向
-    // chassis_cmd_send.vy = 10.0f * (float)rc_data[TEMP].rc.rocker_r1; // 垂直方向
 
+//    // 摩擦轮控制：左上侧拨轮向上打(低于-100)打开摩擦轮
+//    if (rc_data.rc.dial < -100) 
+//        shoot_cmd_send.friction_mode = FRICTION_ON;
+//    else
+//        shoot_cmd_send.friction_mode = FRICTION_OFF;
+//        
+//    // 拨弹控制：左上侧拨轮向上打满(低于-500)开启连发
+//    if (rc_data.rc.dial < -500)
+//        shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
+//    else
+//        shoot_cmd_send.load_mode = LOAD_STOP;
+//        
+//    // 射频控制：固定每秒 x 发
+//    shoot_cmd_send.shoot_rate = 25;
+// ========================================================
+    // 3. 拨弹电机控制 (右侧摇杆，垂直r1控制发射，水平r0控制退弹)
     // ========================================================
-    // 5. 发射机构控制数据设定
-    // ========================================================
-    // 弹舱开闭逻辑 (待添加 servo_motor 模块)
-    // if (switch_is_up(rc_data.rc.switch_right)) ... 
+    static bool single_shoot_lock = false; // 单发软开关的边沿检测标志位
 
-    // 摩擦轮控制：左上侧拨轮向上打(低于-100)打开摩擦轮
-    if (rc_data.rc.dial < -100) 
-        shoot_cmd_send.friction_mode = FRICTION_ON;
-    else
-        shoot_cmd_send.friction_mode = FRICTION_OFF;
+    // 优先判断水平方向（退弹）
+    if (rc_data.rc.rocker_r_ < -50) // 右摇杆向左推 (退弹/反转)
+    {
+        single_shoot_lock = false; // 解锁单发
+        shoot_cmd_send.load_mode = LOAD_REVERSE;
         
-    // 拨弹控制：左上侧拨轮向上打满(低于-500)开启连发
-    if (rc_data.rc.dial < -500)
+        // 线性映射：摇杆死区 -50 到 极值 -660 映射到 0~25 的抽象速度等级
+        float rate = (float)(-rc_data.rc.rocker_r_ - 50) / 610.0f * 25.0f;
+        shoot_cmd_send.shoot_rate = (uint8_t)rate; 
+    }
+    // 再判断垂直方向（发射）
+//    else if (rc_data.rc.rocker_r1 < -300) // 右摇杆向下打过一半 (触发单发)
+//    {
+////        if (!single_shoot_lock)
+////        {
+////            shoot_cmd_send.load_mode = LOAD_1_BULLET;
+////            single_shoot_lock = true; // 上锁，必须摇杆回中才能解锁下一次单发
+////        }
+////        else
+////        {
+////            shoot_cmd_send.load_mode = LOAD_1_BULLET; // 维持单发指令模式
+////        }
+//    }
+    else if (rc_data.rc.rocker_r1 > 50) // 右摇杆向上推 (线性连发)
+    {
+        single_shoot_lock = false; 
         shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
-    else
+
+        // 线性映射射频 (0~25 发/秒)
+        float rate = (float)(rc_data.rc.rocker_r1 - 50) / 610.0f * 25.0f;
+        shoot_cmd_send.shoot_rate = (uint8_t)rate; 
+    }
+    else // 摇杆回中 (-50 ~ 50 死区)
+    {
+        single_shoot_lock = false; 
         shoot_cmd_send.load_mode = LOAD_STOP;
-        
-    // 射频控制：固定每秒 8 发
-    shoot_cmd_send.shoot_rate = 8;
+        shoot_cmd_send.shoot_rate = 0;
+    }
 }
 
 /**
@@ -239,8 +262,6 @@ static void RemoteControlSet()
  */
 static void MouseKeySet()
 {
-    // chassis_cmd_send.vx = rc_data[TEMP].key[KEY_PRESS].w * 300 - rc_data[TEMP].key[KEY_PRESS].s * 300; // 系数待测
-    // chassis_cmd_send.vy = rc_data[TEMP].key[KEY_PRESS].s * 300 - rc_data[TEMP].key[KEY_PRESS].d * 300;
 
     // gimbal_cmd_send.yaw += (float)rc_data[TEMP].mouse.x / 660 * 10; // 系数待测
     // gimbal_cmd_send.pitch += (float)rc_data[TEMP].mouse.y / 660 * 10;
@@ -347,9 +368,6 @@ if (robot_state == ROBOT_STOP && remote_ctrl.rc_lost == false && rc_data.rc.dial
         }
     }
 
-    // ========================================================
-    // 3. 动作执行：锁定状态下的绝对无力化 (拦截并覆盖前面的指令)
-    // ========================================================
     if (robot_state == ROBOT_STOP)
     {
         gimbal_cmd_send.gimbal_mode = GIMBAL_ZERO_FORCE;
@@ -391,8 +409,6 @@ void Control_Task(void const * argument)
 
 	    EmergencyHandler(); // 处理模块离线和遥控器急停等紧急情况
 
-	    // 设置视觉发送数据,还需增加加速度和角速度数据
-	    // VisionSetFlag(chassis_fetch_data.enemy_color,,chassis_fetch_data.bullet_speed)
 
 	    // 推送消息,双板通信,视觉通信等
 	    // 其他应用所需的控制数据在remotecontrolsetmode和mousekeysetmode中完成设置

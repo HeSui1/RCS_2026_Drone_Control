@@ -7,6 +7,8 @@
 #include "general_def.h"
 #include "bsp_uart.h"
 
+#include "ramp.h"
+
 /* 对于双发射机构的机器人,将下面的数据封装成结构体即可,生成两份shoot应用实例 */
 DJIMotorInstance *friction_l, *friction_r, *loader; // 拨盘电机
 // static servo_instance *lid; 需要增加弹舱盖
@@ -18,7 +20,9 @@ Shoot_Upload_Data_s shoot_feedback_data; // 来自cmd的发射控制信息
 
 // dwt定时,计算冷却用
 static float hibernate_time = 0, dead_time = 0;
-
+static uint8_t last_load_mode = LOAD_STOP;    // 记录上一次的拨弹模式，用于检测边沿
+static float loader_target_angle = 0;         // 记录拨盘的绝对目标角度
+		
 void ShootInit()
 {
     // 左摩擦轮
@@ -70,9 +74,11 @@ void ShootInit()
         .controller_param_init_config = {
             .angle_PID = {
                 // 如果启用位置环来控制发弹,需要较大的I值保证输出力矩的线性度否则出现接近拨出的力矩大幅下降
-                .Kp = 0, // 10
+                .Kp = 10, // 10
                 .Ki = 0,
                 .Kd = 0,
+							  .Improve = PID_Integral_Limit,
+                .IntegralLimit = 100,
                 .MaxOut = 200,
             },
             .speed_PID = {
@@ -98,7 +104,7 @@ void ShootInit()
             .close_loop_type = CURRENT_LOOP | SPEED_LOOP,
             .motor_reverse_flag = MOTOR_DIRECTION_NORMAL, // 注意方向设置为拨盘的拨出的击发方向
         },
-        .motor_type = M2006 // 英雄使用m3508
+        .motor_type = M2006 
     };
     loader = DJIMotorInit(&loader_config);
 
@@ -126,10 +132,6 @@ void ShootTask()
         DJIMotorEnable(loader);
     }
 
-    // 如果上一次触发单发或3发指令的时间加上不应期仍然大于当前时间(尚未休眠完毕),直接返回即可
-    // 单发模式主要提供给能量机关激活使用(以及英雄的射击大部分处于单发)
-    // if (hibernate_time + dead_time > DWT_GetTimeline_ms())
-    //     return;
 
     // 若不在休眠状态,根据robotCMD传来的控制模式进行拨盘电机参考值设定和模式切换
     switch (shoot_cmd_recv.load_mode)
@@ -140,12 +142,17 @@ void ShootTask()
         DJIMotorSetRef(loader, 0);             // 同时设定参考值为0,这样停止的速度最快
         break;
     // 单发模式,根据鼠标按下的时间,触发一次之后需要进入不响应输入的状态(否则按下的时间内可能多次进入,导致多次发射)
-    case LOAD_1_BULLET:                                                                     // 激活能量机关/干扰对方用,英雄用.
-        DJIMotorOuterLoop(loader, ANGLE_LOOP);                                              // 切换到角度环
-        DJIMotorSetRef(loader, loader->measure.total_angle + ONE_BULLET_DELTA_ANGLE); // 控制量增加一发弹丸的角度
-        hibernate_time = DWT_GetTimeline_ms();                                              // 记录触发指令的时间
-        dead_time = 150;                                                                    // 完成1发弹丸发射的时间
-        break;
+    case LOAD_1_BULLET:			// 激活能量机关/干扰对方用
+				DJIMotorOuterLoop(loader, ANGLE_LOOP); 
+        if (last_load_mode != LOAD_1_BULLET) 
+        {
+            // 基于电机当前的实际角度，往前减一发子弹的角度
+            loader_target_angle = loader->measure.total_angle - ONE_BULLET_DELTA_ANGLE;
+            hibernate_time = DWT_GetTimeline_ms(); 
+            dead_time = 150;                       
+        }                                                                     
+        DJIMotorSetRef(loader, loader_target_angle);
+				break;
     // 三连发,如果不需要后续可能删除
     case LOAD_3_BULLET:
         DJIMotorOuterLoop(loader, ANGLE_LOOP);                                                  // 切换到速度环
@@ -163,42 +170,61 @@ void ShootTask()
     // 也有可能需要从switch-case中独立出来
     case LOAD_REVERSE:
         DJIMotorOuterLoop(loader, SPEED_LOOP);
+				DJIMotorSetRef(loader, -shoot_cmd_recv.shoot_rate * 360 * REDUCTION_RATIO_LOADER / 8);
         // ...
         break;
     default:
         while (1)
             ; // 未知模式,停止运行,检查指针越界,内存溢出等问题
+
+				
     }
 
-    // 确定是否开启摩擦轮,后续可能修改为键鼠模式下始终开启摩擦轮(上场时建议一直开启)
+// ==========================================================
+    // 摩擦轮斜坡控制逻辑开始
+    // ==========================================================
+    static float friction_l_current = 0; // 静态变量：保存左摩擦轮当前实际下发的转速
+    static float friction_r_current = 0; // 静态变量：保存右摩擦轮当前实际下发的转速
+    
+    float target_speed = 0; // 临时变量：当前期望的目标速度
+
+    // 1. 根据指令确定目标速度 target_speed
     if (shoot_cmd_recv.friction_mode == FRICTION_ON)
     {
-        // 根据收到的弹速设置设定摩擦轮电机参考值,需实测后填入
         switch (shoot_cmd_recv.bullet_speed)
         {
         case SMALL_AMU_15:
-            DJIMotorSetRef(friction_l, 0);
-            DJIMotorSetRef(friction_r, 0);
+            target_speed = 5000;
             break;
         case SMALL_AMU_18:
-            DJIMotorSetRef(friction_l, 0);
-            DJIMotorSetRef(friction_r, 0);
+            target_speed = 6000;
             break;
         case SMALL_AMU_30:
-            DJIMotorSetRef(friction_l, 0);
-            DJIMotorSetRef(friction_r, 0);
+            target_speed = 8000;
             break;
-        default: // 当前为了调试设定的默认值4000,因为还没有加入裁判系统无法读取弹速.
-            DJIMotorSetRef(friction_l, 30000);
-            DJIMotorSetRef(friction_r, 30000);
+        default: 
+            target_speed = 40000; // 默认值
             break;
         }
     }
-    else // 关闭摩擦轮
+    else 
     {
-        DJIMotorSetRef(friction_l, 0);
-        DJIMotorSetRef(friction_r, 0);
+        target_speed = 0; // 关闭摩擦轮时，目标速度设为0
     }
+
+    // 2. 调用 ramp 函数进行平滑过渡
+    // 这里的 15.0f 是步长。假设从 7000 降到 0，每 5ms 降 15，大约需要 2.3 秒停稳。
+    // 如果你觉得刹车太慢，可以把 15.0f 改成 20.0f 或 30.0f。
+    friction_l_current = f_Ramp_Calc(friction_l_current, target_speed, 4.0f);
+    friction_r_current = f_Ramp_Calc(friction_r_current, target_speed, 4.0f);
+
+    // 3. 将平滑后的当前速度下发给底层 PID
+    DJIMotorSetRef(friction_l, friction_l_current);
+    DJIMotorSetRef(friction_r, friction_r_current);
+
+    // ==========================================================
+    // 摩擦轮斜坡控制逻辑结束
+    // ==========================================================
 
     // 开关弹舱盖
     if (shoot_cmd_recv.lid_mode == LID_CLOSE)

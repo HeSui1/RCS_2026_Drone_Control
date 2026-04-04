@@ -1,7 +1,5 @@
 cod_h7_template/robot_task.o: ..\USER\Application\Task\Src\Robot_Task.c \
-  ..\USER\BSP\Inc\bsp_mcu.h \
-  D:\Engineering\electriccontrol\keil5\ARM\ARMCLANG\Bin\..\include\stdint.h \
-  ..\USER\Application\Task\Inc\Robot_Task.h \
+  ..\USER\BSP\Inc\bsp_mcu.h ..\USER\Application\Task\Inc\Robot_Task.h \
   ..\USER\Application\Task\Inc\robot_def.h \
   ..\USER\Application\Task\Inc\ins_task.h ..\USER\BSP\Inc\bsp_dwt.h \
   ..\Core\Inc\main.h ..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal.h \
@@ -11,16 +9,8 @@ cod_h7_template/robot_task.o: ..\USER\Application\Task\Src\Robot_Task.c \
   ..\Drivers\CMSIS\Device\ST\STM32H7xx\Include\stm32h7xx.h \
   ..\Drivers\CMSIS\Device\ST\STM32H7xx\Include\stm32h723xx.h \
   ..\Drivers\CMSIS\Include\core_cm7.h \
-  ..\Drivers\CMSIS\Include\cmsis_version.h \
-  ..\Drivers\CMSIS\Include\cmsis_compiler.h \
-  ..\Drivers\CMSIS\Include\cmsis_armclang.h \
-  D:\Engineering\electriccontrol\keil5\ARM\ARMCLANG\Bin\..\include\arm_compat.h \
-  D:\Engineering\electriccontrol\keil5\ARM\ARMCLANG\Bin\..\include\arm_acle.h \
-  ..\Drivers\CMSIS\Include\mpu_armv7.h \
   ..\Drivers\CMSIS\Device\ST\STM32H7xx\Include\system_stm32h7xx.h \
   ..\Drivers\STM32H7xx_HAL_Driver\Inc\Legacy\stm32_hal_legacy.h \
-  D:\Engineering\electriccontrol\keil5\ARM\ARMCLANG\Bin\..\include\stddef.h \
-  D:\Engineering\electriccontrol\keil5\ARM\ARMCLANG\Bin\..\include\math.h \
   ..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_rcc_ex.h \
   ..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_gpio.h \
   ..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_gpio_ex.h \
@@ -67,11 +57,7 @@ cod_h7_template/robot_task.o: ..\USER\Application\Task\Src\Robot_Task.c \
   ..\USER\Components\Device\Inc\dm_motor.h ..\USER\BSP\Inc\bsp_can.h \
   ..\Core\Inc\fdcan.h ..\USER\Components\Device\Inc\motor_def.h \
   ..\USER\Components\Algorithm\Inc\controller.h \
-  D:\Engineering\electriccontrol\keil5\ARM\ARMCLANG\Bin\..\include\stdlib.h \
   ..\Middlewares\ST\ARM\DSP\Inc\arm_math.h \
-  D:\Engineering\electriccontrol\keil5\ARM\ARMCLANG\Bin\..\include\string.h \
-  D:\Engineering\electriccontrol\keil5\ARM\ARMCLANG\Bin\..\include\float.h \
-  D:\Engineering\electriccontrol\keil5\ARM\ARMCLANG\Bin\..\include\limits.h \
+  ..\Drivers\CMSIS\Include\cmsis_compiler.h \
   ..\USER\Application\Task\Inc\config.h \
-  D:\Engineering\electriccontrol\keil5\ARM\ARMCLANG\Bin\..\include\stdbool.h \
   ..\USER\Application\Task\shoot\shoot.h

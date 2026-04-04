@@ -43,11 +43,7 @@ DM_Motor_Info_Typedef* DM_Motor_Init(DM_Motor_Init_Config_s *config)
     // 2. 加载基础配置参数
     instance->Control_Mode = config->control_mode;
 
-    // ========================================================
-    // 【新增】智能参数补全机制
-    // 如果用户手动填了极限值 (P_MAX != 0)，就使用用户的；
-    // 如果用户没填，则根据电机型号自动补全出厂极限值。
-    // ========================================================
+
     if (config->param_limits.P_MAX != 0.0f) 
     {
         instance->Param_Range = config->param_limits;
@@ -81,9 +77,6 @@ DM_Motor_Info_Typedef* DM_Motor_Init(DM_Motor_Init_Config_s *config)
         }
     }	
 	
- 
-    
-    // 兼容原代码的习惯，保存一份 ID
     instance->FDCANFrame.TxIdentifier = config->can_init_config.tx_id;
     instance->FDCANFrame.RxIdentifier = config->can_init_config.rx_id;
 
@@ -106,24 +99,6 @@ DM_Motor_Info_Typedef* DM_Motor_Init(DM_Motor_Init_Config_s *config)
     return instance;
 }
 
-
-///**
-// * @brief 达妙 3507 电机实例初始化
-// * 注意：T_MAX 必须改为 3.0f，否则力矩控制会极其微弱或报错！
-// */
-//DM_Motor_Info_Typedef DM_3507_Pitch_Motor = {
-//    .Control_Mode = MIT,  // 同样使用 MIT 模式
-//    .Param_Range = {
-//        .P_MAX = 100.f, // 位置范围 (rad)，通常设为 PI (12.5 也可以，需与达妙上位机一致)
-//        .V_MAX = 50.0f,     // 速度范围 (rad/s)，3507 最大约 48 rad/s，留点余量设 50
-//        .T_MAX = 3.0f       // 【关键】扭矩范围 (Nm)，3507 峰值只有 3Nm！
-//    },
-//    .FDCANFrame = {
-//        .TxIdentifier = 0x05, // 假设你想设为 ID 5 (根据你的拨码开关或上位机设定)
-//        .RxIdentifier = 0x15, // 反馈 ID 通常是 TxID + 0x10
-//    },
-//    // Data 部分初始化为 0 即可
-//};
 
 
 //------------------------------------------------------------------------------
