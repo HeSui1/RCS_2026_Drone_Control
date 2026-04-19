@@ -36,7 +36,9 @@ set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} ${COMMON_FLAGS} ${MCU_FLAGS}")
 # 3. 源文件与目录配置
 # =========================================================
 add_executable(${CMAKE_PROJECT_NAME}
-        USER/Components/Device/Src/dm_motor.c)
+        USER/Components/Device/Src/dm_motor.c
+        USER/Components/Device/Src/VT03.c
+        USER/Components/Device/Inc/VT03.h)
 
 # 添加 CubeMX 生成的源码 (此时它会继承上面的编译器参数)
 add_subdirectory(cmake/stm32cubemx)

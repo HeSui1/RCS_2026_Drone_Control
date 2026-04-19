@@ -18,6 +18,7 @@
 #include "Control_Task.h"
 #include "Remote_Control_COD.h"
 #include "bsp_gpio.h"
+#include "VT03.h"
 
 /**
   * @note turn on:  800
@@ -42,6 +43,7 @@ void Detect_Task(void const * argument)
   {
 
     Remote_Message_Moniter(&remote_ctrl); 
+		VT03_Monitor();
     osDelay(1);
   }
   /* USER CODE END Detect_Task */

@@ -16,6 +16,7 @@
 #include "usart.h"
 #include "Remote_Control_COD.h"
 #include "Referee_System.h"
+#include "VT03.h"
 
 
 void USART_Vofa_Justfloat_Transmit(float SendValue1,float SendValue2,float SendValue3){
@@ -66,9 +67,10 @@ static void USART_RxDMA_MultiBuffer_Init(UART_HandleTypeDef *, uint32_t *, uint3
   */
 void BSP_USART_Init(void){
 
-		
 	USART_RxDMA_MultiBuffer_Init(&huart1,(uint32_t *)Referee_System_Info_MultiRx_Buf[0],(uint32_t *)Referee_System_Info_MultiRx_Buf[1],REFEREE_RXFRAME_LENGTH);
-
+	
+	USART_RxDMA_MultiBuffer_Init(&huart7, (uint32_t *)VT03_MultiRx_Buf[0], (uint32_t *)VT03_MultiRx_Buf[1], VT03_RX_BUF_NUM);
+	
 	USART_RxDMA_MultiBuffer_Init(&huart5,(uint32_t *)SBUS_MultiRx_Buf[0],(uint32_t *)SBUS_MultiRx_Buf[1],SBUS_RX_BUF_NUM);
 
 }
@@ -181,6 +183,53 @@ static void USER_USART5_RxHandler(UART_HandleTypeDef *huart,uint16_t Size){
   *               reception buffer until which, data are available)
   * @retval None
   */
+
+/**
+ * @brief  USER USART1 Reception Event Callback.(VT03 Remote Control)
+ */
+//static void USER_USART1_RxHandler(UART_HandleTypeDef *huart, uint16_t Size)
+//{
+//    /* Current memory buffer used is Memory 0 */
+//    if(((((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->CR) & DMA_SxCR_CT ) == RESET)
+//    {
+//        /* Disable DMA */
+//        __HAL_DMA_DISABLE(huart->hdmarx);
+//        
+//        /* Switch Memory 0 to Memory 1*/
+//        ((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->CR |= DMA_SxCR_CT;
+//        
+//        /* Reset the receive count (VT03_RX_BUF_NUM = 21) */
+//        __HAL_DMA_SET_COUNTER(huart->hdmarx, VT03_RX_BUF_NUM * 2);
+
+//        /* 严格判断数据长度是否为 21 字节 */
+//        if(Size == VT03_RX_BUF_NUM)
+//        {
+//            // 清理 D-Cache 保证读取到的是 DMA 刚搬运进 RAM 的新鲜数据
+//            SCB_InvalidateDCache_by_Addr((uint32_t *)VT03_MultiRx_Buf[0], 32); 
+//            // 传入刚才写好的解析函数
+//            VT03_Parse(VT03_MultiRx_Buf[0]);
+//        }
+//    }
+//    /* Current memory buffer used is Memory 1 */
+//    else
+//    {
+//        /* Disable DMA */
+//        __HAL_DMA_DISABLE(huart->hdmarx);
+//        
+//        /* Switch Memory 1 to Memory 0*/
+//        ((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->CR &= ~(DMA_SxCR_CT);
+//        
+//        /* Reset the receive count */
+//        __HAL_DMA_SET_COUNTER(huart->hdmarx, VT03_RX_BUF_NUM * 2);
+
+//        if(Size == VT03_RX_BUF_NUM)
+//        {
+//            SCB_InvalidateDCache_by_Addr((uint32_t *)VT03_MultiRx_Buf[1], 32);
+//            VT03_Parse(VT03_MultiRx_Buf[1]);
+//        }
+//    }
+//}
+
 static void USER_USART1_RxHandler(UART_HandleTypeDef *huart,uint16_t Size){
 
 
@@ -192,6 +241,9 @@ static void USER_USART1_RxHandler(UART_HandleTypeDef *huart,uint16_t Size){
 					((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->CR |= DMA_SxCR_CT;
 				
 				  if(Size >= 10){
+						
+						// === 新增：清理 D-Cache (注意长度是 160) ===
+            SCB_InvalidateDCache_by_Addr((uint32_t *)Referee_System_Info_MultiRx_Buf[0], 160);
 						
 						    Referee_System_Frame_Update(Referee_System_Info_MultiRx_Buf[0]);
 				
@@ -209,6 +261,9 @@ static void USER_USART1_RxHandler(UART_HandleTypeDef *huart,uint16_t Size){
 				
 		    if(Size >= 10){
         
+						// === 新增：清理 D-Cache (注意长度是 160) ===
+            SCB_InvalidateDCache_by_Addr((uint32_t *)Referee_System_Info_MultiRx_Buf[1], 160);
+					
 			         Referee_System_Frame_Update(Referee_System_Info_MultiRx_Buf[1]);
 				
 				       memset(Referee_System_Info_MultiRx_Buf[1],0,REFEREE_RXFRAME_LENGTH);
@@ -219,6 +274,40 @@ static void USER_USART1_RxHandler(UART_HandleTypeDef *huart,uint16_t Size){
 	}
   
 }
+
+/**
+ * @brief  USER UART7 Reception Event Callback.(VT03 Remote Control)
+ */
+static void USER_UART7_RxHandler(UART_HandleTypeDef *huart, uint16_t Size)
+{
+    /* Current memory buffer used is Memory 0 */
+    if(((((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->CR) & DMA_SxCR_CT ) == RESET)
+    {
+        __HAL_DMA_DISABLE(huart->hdmarx);
+        ((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->CR |= DMA_SxCR_CT;
+        __HAL_DMA_SET_COUNTER(huart->hdmarx, VT03_RX_BUF_NUM * 2);
+
+        if(Size == VT03_RX_BUF_NUM)
+        {
+            SCB_InvalidateDCache_by_Addr((uint32_t *)VT03_MultiRx_Buf[0], 32); 
+            VT03_Parse(VT03_MultiRx_Buf[0]);
+        }
+    }
+    /* Current memory buffer used is Memory 1 */
+    else
+    {
+        __HAL_DMA_DISABLE(huart->hdmarx);
+        ((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->CR &= ~(DMA_SxCR_CT);
+        __HAL_DMA_SET_COUNTER(huart->hdmarx, VT03_RX_BUF_NUM * 2);
+
+        if(Size == VT03_RX_BUF_NUM)
+        {
+            SCB_InvalidateDCache_by_Addr((uint32_t *)VT03_MultiRx_Buf[1], 32);
+            VT03_Parse(VT03_MultiRx_Buf[1]);
+        }
+    }
+}
+
 
 /**
   * @brief  USER USART10 Reception Event Callback.
@@ -276,6 +365,11 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart,uint16_t Size)
       USER_USART1_RxHandler(huart,Size);
 			
 	 }
+	 if(huart == &huart7){
+		 
+        USER_UART7_RxHandler(huart, Size);
+		 
+    }
 	
    huart->ReceptionType = HAL_UART_RECEPTION_TOIDLE;
 	

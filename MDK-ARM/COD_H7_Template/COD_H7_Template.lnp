@@ -14,6 +14,7 @@
 "cod_h7_template\dji_motor.o"
 "cod_h7_template\remote_control_cod.o"
 "cod_h7_template\dm_motor.o"
+"cod_h7_template\vt03.o"
 "cod_h7_template\bsp_adc.o"
 "cod_h7_template\bsp_can.o"
 "cod_h7_template\bsp_gpio.o"

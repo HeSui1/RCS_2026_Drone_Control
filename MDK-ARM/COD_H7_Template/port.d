@@ -1,6 +1,8 @@
 cod_h7_template/port.o: \
   ..\Middlewares\Third_Party\FreeRTOS\Source\portable\GCC\ARM_CM4F\port.c \
   ..\Middlewares\Third_Party\FreeRTOS\Source\include\FreeRTOS.h \
+  D:\Engineering\electriccontrol\keil5\ARM\ARMCLANG\Bin\..\include\stddef.h \
+  D:\Engineering\electriccontrol\keil5\ARM\ARMCLANG\Bin\..\include\stdint.h \
   ..\Core\Inc\FreeRTOSConfig.h \
   ..\Middlewares\Third_Party\FreeRTOS\Source\include\projdefs.h \
   ..\Middlewares\Third_Party\FreeRTOS\Source\include\portable.h \

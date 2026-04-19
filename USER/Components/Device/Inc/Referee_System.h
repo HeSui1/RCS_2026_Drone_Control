@@ -359,7 +359,7 @@ typedef  struct
   uint16_t projectile_allowance_17mm; 
   uint16_t projectile_allowance_42mm;  
   uint16_t remaining_gold_coin; 
-}projectile_allowance_t;;
+}projectile_allowance_t;
 
 /**
  * @brief typedef structure that contains the information of RFID status, id: 0x0209U
@@ -584,13 +584,14 @@ typedef struct
 /**
  * @brief Referee_RxDMA MultiBuffer
  */
-extern uint8_t Referee_System_Info_MultiRx_Buf[2][REFEREE_RXFRAME_LENGTH];
+//extern uint8_t Referee_System_Info_MultiRx_Buf[2][REFEREE_RXFRAME_LENGTH];
+extern __attribute__((section (".AXI_SRAM"), aligned(32))) uint8_t Referee_System_Info_MultiRx_Buf[2][160];
 
 /**
  * @brief Referee structure variable
  */
-extern Referee_System_Info_TypeDef Referee_Info;
-
+//extern Referee_System_Info_TypeDef Referee_Info;
+extern Referee_System_Info_TypeDef Referee_System_Info;
 
 /* Exported functions prototypes ---------------------------------------------*/
 extern void Referee_System_Frame_Update(uint8_t *Buff);
