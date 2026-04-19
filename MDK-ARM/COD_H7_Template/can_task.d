@@ -1,8 +1,6 @@
 cod_h7_template/can_task.o: ..\USER\Application\Task\Src\CAN_Task.c \
   ..\Middlewares\Third_Party\FreeRTOS\Source\CMSIS_RTOS\cmsis_os.h \
   ..\Middlewares\Third_Party\FreeRTOS\Source\include\FreeRTOS.h \
-  D:\Engineering\electriccontrol\keil5\ARM\ARMCLANG\Bin\..\include\stddef.h \
-  D:\Engineering\electriccontrol\keil5\ARM\ARMCLANG\Bin\..\include\stdint.h \
   ..\Core\Inc\FreeRTOSConfig.h \
   ..\Middlewares\Third_Party\FreeRTOS\Source\include\projdefs.h \
   ..\Middlewares\Third_Party\FreeRTOS\Source\include\portable.h \
@@ -17,25 +15,17 @@ cod_h7_template/can_task.o: ..\USER\Application\Task\Src\CAN_Task.c \
   ..\Middlewares\Third_Party\FreeRTOS\Source\include\event_groups.h \
   ..\USER\Application\Task\Inc\CAN_Task.h \
   ..\USER\Application\Task\Inc\Control_Task.h \
-  D:\Engineering\electriccontrol\keil5\ARM\ARMCLANG\Bin\..\include\stdbool.h \
   ..\USER\Application\Task\Inc\INS_Task.h \
   ..\USER\Components\Device\Inc\Motor.h ..\USER\BSP\Inc\bsp_can.h \
   ..\Drivers\CMSIS\Device\ST\STM32H7xx\Include\stm32h7xx.h \
   ..\Drivers\CMSIS\Device\ST\STM32H7xx\Include\stm32h723xx.h \
   ..\Drivers\CMSIS\Include\core_cm7.h \
-  ..\Drivers\CMSIS\Include\cmsis_version.h \
-  ..\Drivers\CMSIS\Include\cmsis_compiler.h \
-  ..\Drivers\CMSIS\Include\cmsis_armclang.h \
-  D:\Engineering\electriccontrol\keil5\ARM\ARMCLANG\Bin\..\include\arm_compat.h \
-  D:\Engineering\electriccontrol\keil5\ARM\ARMCLANG\Bin\..\include\arm_acle.h \
-  ..\Drivers\CMSIS\Include\mpu_armv7.h \
   ..\Drivers\CMSIS\Device\ST\STM32H7xx\Include\system_stm32h7xx.h \
   ..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal.h \
   ..\Core\Inc\stm32h7xx_hal_conf.h \
   ..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_rcc.h \
   ..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_def.h \
   ..\Drivers\STM32H7xx_HAL_Driver\Inc\Legacy\stm32_hal_legacy.h \
-  D:\Engineering\electriccontrol\keil5\ARM\ARMCLANG\Bin\..\include\math.h \
   ..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_rcc_ex.h \
   ..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_gpio.h \
   ..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_gpio_ex.h \
@@ -65,16 +55,11 @@ cod_h7_template/can_task.o: ..\USER\Application\Task\Src\CAN_Task.c \
   ..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_ll_usb.h \
   ..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_pcd_ex.h \
   ..\Core\Inc\fdcan.h ..\Core\Inc\main.h \
-  ..\USER\Components\Device\Inc\Remote_Control_COD.h \
-  D:\Engineering\electriccontrol\keil5\ARM\ARMCLANG\Bin\..\include\stdlib.h \
-  D:\Engineering\electriccontrol\keil5\ARM\ARMCLANG\Bin\..\include\string.h \
-  D:\Engineering\electriccontrol\keil5\ARM\ARMCLANG\Bin\..\include\stdio.h \
-  ..\Core\Inc\usart.h ..\USER\BSP\Inc\bsp_dwt.h \
-  ..\USER\Components\Device\Inc\dji_motor.h \
+  ..\USER\Components\Device\Inc\Remote_Control_COD.h ..\Core\Inc\usart.h \
+  ..\USER\BSP\Inc\bsp_dwt.h ..\USER\Components\Device\Inc\dji_motor.h \
   ..\USER\Components\Algorithm\Inc\controller.h \
   ..\Middlewares\ST\ARM\DSP\Inc\arm_math.h \
-  D:\Engineering\electriccontrol\keil5\ARM\ARMCLANG\Bin\..\include\float.h \
-  D:\Engineering\electriccontrol\keil5\ARM\ARMCLANG\Bin\..\include\limits.h \
+  ..\Drivers\CMSIS\Include\cmsis_compiler.h \
   ..\USER\Components\Device\Inc\motor_def.h ..\USER\BSP\Inc\bsp_uart.h \
   ..\USER\Application\Task\gimbal\gimbal.h \
   ..\USER\Components\Device\Inc\dm_motor.h \

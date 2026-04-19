@@ -16,6 +16,7 @@
 #include "cmsis_os.h"
 #include "bsp_uart.h"
 #include "Remote_Control_COD.h"
+#include "VT03.h"
 //#include "PID.h"
 //#include "Motor.h"
 #include "message_center.h"
@@ -57,6 +58,9 @@ Shoot_Ctrl_Cmd_s shoot_cmd_send;      // 传递给发射的控制信息
 static Shoot_Upload_Data_s shoot_fetch_data; // 从发射获取的反馈信息
 
 Robot_Status_e robot_state; // 机器人整体工作状态
+
+static bool gimbal_enabled = false; // 云台使能软开关，初始为 false (失能)
+static uint8_t last_fn_1_state = 0; // 用于检测 fn_1 是否产生按下动作 (边沿检测)
 
 void RobotCMDInit()
 {
@@ -121,71 +125,37 @@ static void CalcOffsetAngle()
 static uint8_t last_gimbal_mode = GIMBAL_ZERO_FORCE;
 
 /**
- * @brief 控制输入为遥控器(调试时)的模式和控制量设置
+ * @brief VT03 专属手动控制逻辑 (纯遥控器操作)
  */
 static void RemoteControlSet()
 {
     // ========================================================
-    // 1. 控制运行模式设定 (右侧开关)
+    // 1. 软开关逻辑 (fn_1 按键边沿检测)
     // ========================================================
-    if (switch_is_down(rc_data.rc.switch_right)) //右侧开关[下]: 摩擦轮常开，云台受控
+    // 只有在 fn_1 从 0 变成 1 的瞬间，才切换云台的使能状态
+    if (vt03_info.parsed.rc.fn_1 == 1 && last_fn_1_state == 0)
     {
-				gimbal_cmd_send.gimbal_mode = GIMBAL_GYRO_MODE;
-        shoot_cmd_send.friction_mode = FRICTION_ON;
+        gimbal_enabled = !gimbal_enabled; 
     }
-    else if (switch_is_mid(rc_data.rc.switch_right)) // 右侧开关[中]: 摩擦轮关闭，云台受控
-    {
-				gimbal_cmd_send.gimbal_mode = GIMBAL_GYRO_MODE; 
-        shoot_cmd_send.friction_mode = FRICTION_OFF;
-			
-    }
-		else if (switch_is_up(rc_data.rc.switch_right)) // 右侧开关[上]: 安全待机状态 (云台掉电，摩擦轮关)
-    {
-       gimbal_cmd_send.gimbal_mode = GIMBAL_ZERO_FORCE;
-			 shoot_cmd_send.friction_mode = FRICTION_OFF;			
-    }
+    last_fn_1_state = vt03_info.parsed.rc.fn_1; // 更新历史状态
 
-
-    if (switch_is_mid(rc_data.rc.switch_left)) // 左侧开关状态[中], 视觉模式
+    // ========================================================
+    // 2. 云台控制 (受软开关管辖)
+    // ========================================================
+    if (gimbal_enabled)
     {
-// 1. 强制云台进入陀螺仪模式 (视觉通常需要世界坐标系下的绝对角度)
         gimbal_cmd_send.gimbal_mode = GIMBAL_GYRO_MODE;
 
-        gimbal_cmd_send.yaw = vision_rx_data.yaw*57.29578;
-        gimbal_cmd_send.pitch = vision_rx_data.pitch*57.29578;
+        // 摇杆增量叠加 (系数 0.0002f 视底盘电机的实际灵敏度可调)
+        // ch_3 控制 Yaw：负数向左，正数向右。(注：如果发现向左推摇杆云台却向右转，把这里的 += 改成 -= 即可)
+        gimbal_cmd_send.yaw += 0.0002f * (float)vt03_info.parsed.rc.ch_3; 
         
-        float pitch_max_limit = 17.f;  // 约仰角 17 度
-        float pitch_min_limit = -17.f; // 约俯角 17 度
-        if (gimbal_cmd_send.pitch > pitch_max_limit) 
-        {
-            gimbal_cmd_send.pitch = pitch_max_limit;
-        }
-        else if (gimbal_cmd_send.pitch < pitch_min_limit) 
-        {
-            gimbal_cmd_send.pitch = pitch_min_limit;
-        }
+        // ch_1 控制 Pitch：正数向上，负数向下。
+        gimbal_cmd_send.pitch += 0.0002f * (float)vt03_info.parsed.rc.ch_1;
 
-        // 上位机 mode: 0: 不控制, 1: 控制云台不开火, 2: 控制云台且开火
-        if (vision_rx_data.mode == 2) 
-        {
-            shoot_cmd_send.load_mode = LOAD_BURSTFIRE; // 触发连发拨弹
-            shoot_cmd_send.friction_mode = FRICTION_OFF;// 确保摩擦轮开启
-        }
-        else 
-        {
-            shoot_cmd_send.load_mode = LOAD_STOP;      // 停止拨弹
-        }
-    }
-    else if (switch_is_down(rc_data.rc.switch_left)) // 左侧开关状态[下], 纯遥控器手动控制
-    { 
-        // 摇杆增量叠加（在刚才对齐的基础上缓慢增加目标角度）
-        gimbal_cmd_send.yaw += 0.0002f * (float)rc_data.rc.rocker_l_;
-        gimbal_cmd_send.pitch += 0.0002f * (float)rc_data.rc.rocker_l1;
-        
-        // Pitch 轴软件限位 (极其重要，防止摇杆一直推把云台线扯断)
-        float pitch_max_limit = 11.f; 
-        float pitch_min_limit = -18.f; 
-        
+        // Pitch 轴软件限位 (必须保留，防止扯断线)
+        float pitch_max_limit = 11.f;
+        float pitch_min_limit = -18.f;
         if (gimbal_cmd_send.pitch > pitch_max_limit) 
         {
             gimbal_cmd_send.pitch = pitch_max_limit;
@@ -195,186 +165,179 @@ static void RemoteControlSet()
             gimbal_cmd_send.pitch = pitch_min_limit;
         }
     }
+    else
+    {
+        // 软开关为 false 时，云台绝对脱力
+        gimbal_cmd_send.gimbal_mode = GIMBAL_ZERO_FORCE;
+    }
 
-
-//    // 摩擦轮控制：左上侧拨轮向上打(低于-100)打开摩擦轮
-//    if (rc_data.rc.dial < -100) 
-//        shoot_cmd_send.friction_mode = FRICTION_ON;
-//    else
-//        shoot_cmd_send.friction_mode = FRICTION_OFF;
-//        
-//    // 拨弹控制：左上侧拨轮向上打满(低于-500)开启连发
-//    if (rc_data.rc.dial < -500)
-//        shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
-//    else
-//        shoot_cmd_send.load_mode = LOAD_STOP;
-//        
-//    // 射频控制：固定每秒 x 发
-//    shoot_cmd_send.shoot_rate = 25;
-// ========================================================
-    // 3. 拨弹电机控制 (右侧摇杆，垂直r1控制发射，水平r0控制退弹)
     // ========================================================
-    static bool single_shoot_lock = false; // 单发软开关的边沿检测标志位
-
-    // 优先判断水平方向（退弹）
-    if (rc_data.rc.rocker_r_ < -50) // 右摇杆向左推 (退弹/反转)
+    // 3. 摩擦轮控制 (mode_sw)
+    // ========================================================
+    if (vt03_info.parsed.rc.mode_sw == 2)
     {
-        single_shoot_lock = false; // 解锁单发
-        shoot_cmd_send.load_mode = LOAD_REVERSE;
-        
-        // 线性映射：摇杆死区 -50 到 极值 -660 映射到 0~25 的抽象速度等级
-        float rate = (float)(-rc_data.rc.rocker_r_ - 50) / 610.0f * 25.0f;
-        shoot_cmd_send.shoot_rate = (uint8_t)rate; 
+        shoot_cmd_send.friction_mode = FRICTION_ON;
     }
-    // 再判断垂直方向（发射）
-//    else if (rc_data.rc.rocker_r1 < -300) // 右摇杆向下打过一半 (触发单发)
-//    {
-////        if (!single_shoot_lock)
-////        {
-////            shoot_cmd_send.load_mode = LOAD_1_BULLET;
-////            single_shoot_lock = true; // 上锁，必须摇杆回中才能解锁下一次单发
-////        }
-////        else
-////        {
-////            shoot_cmd_send.load_mode = LOAD_1_BULLET; // 维持单发指令模式
-////        }
-//    }
-    else if (rc_data.rc.rocker_r1 > 50) // 右摇杆向上推 (线性连发)
+    else
     {
-        single_shoot_lock = false; 
+        shoot_cmd_send.friction_mode = FRICTION_OFF;
+    }
+
+    // ========================================================
+    // 4. 拨弹与退弹控制 (trigger & wheel)
+    // ========================================================
+    if (vt03_info.parsed.rc.trigger == 1) // 扳机按住：连发
+    {
         shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
-
-        // 线性映射射频 (0~25 发/秒)
-        float rate = (float)(rc_data.rc.rocker_r1 - 50) / 610.0f * 25.0f;
-        shoot_cmd_send.shoot_rate = (uint8_t)rate; 
+        shoot_cmd_send.shoot_rate = 25; // 设定一个默认满速射频
     }
-    else // 摇杆回中 (-50 ~ 50 死区)
+    else if (vt03_info.parsed.rc.wheel < -50) // 拨轮向下推过死区：退弹
     {
-        single_shoot_lock = false; 
+        shoot_cmd_send.load_mode = LOAD_REVERSE;
+        // 线性映射：从 -50 到 -660 映射到 0~25 的速度等级
+        float rate = (float)(-vt03_info.parsed.rc.wheel - 50) / 610.0f * 25.0f;
+        shoot_cmd_send.shoot_rate = (uint8_t)rate;
+    }
+    else // 无操作时停止拨弹
+    {
         shoot_cmd_send.load_mode = LOAD_STOP;
         shoot_cmd_send.shoot_rate = 0;
     }
 }
 
 /**
- * @brief 输入为键鼠时模式和控制量设置
- *
+ * @brief VT03 专属键鼠控制逻辑 (图传链路)
  */
 static void MouseKeySet()
 {
+    // ========================================================
+    // 1. 软开关逻辑 (复用 fn_1 使能云台)
+    // ========================================================
+    if (vt03_info.parsed.rc.fn_1 == 1 && last_fn_1_state == 0) {
+        gimbal_enabled = !gimbal_enabled; 
+    }
+    last_fn_1_state = vt03_info.parsed.rc.fn_1;
 
-    // gimbal_cmd_send.yaw += (float)rc_data[TEMP].mouse.x / 660 * 10; // 系数待测
-    // gimbal_cmd_send.pitch += (float)rc_data[TEMP].mouse.y / 660 * 10;
+    // 如果云台未使能，强制失能并退出计算
+    if (!gimbal_enabled) {
+        gimbal_cmd_send.gimbal_mode = GIMBAL_ZERO_FORCE;
+        shoot_cmd_send.friction_mode = FRICTION_OFF;
+        shoot_cmd_send.load_mode = LOAD_STOP;
+        return; 
+    }
 
-    switch (rc_data.key_count[KEY_PRESS][Key_Z] % 3) // Z键设置弹速
-    {
-    case 0:
-         shoot_cmd_send.bullet_speed = 15;
-        break;
-    case 1:
-         shoot_cmd_send.bullet_speed = 18;
-        break;
-    default:
-         shoot_cmd_send.bullet_speed = 30;
-        break;
-    }
-    switch (rc_data.key_count[KEY_PRESS][Key_E] % 4) // E键设置发射模式
-    {
-    case 0:
-         shoot_cmd_send.load_mode = LOAD_STOP;
-        break;
-    case 1:
-         shoot_cmd_send.load_mode = LOAD_1_BULLET;
-        break;
-    case 2:
-         shoot_cmd_send.load_mode = LOAD_3_BULLET;
-        break;
-    default:
-         shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
-        break;
-    }
-    switch (rc_data.key_count[KEY_PRESS][Key_R] % 2) // R键开关弹舱
-    {
-    case 0:
-         shoot_cmd_send.lid_mode = LID_OPEN;
-        break;
-    default:
-         shoot_cmd_send.lid_mode = LID_CLOSE;
-        break;
-    }
-    switch (rc_data.key_count[KEY_PRESS][Key_F] % 2) // F键开关摩擦轮
-    {
-    case 0:
-         shoot_cmd_send.friction_mode = FRICTION_OFF;
-        break;
-    default:
-         shoot_cmd_send.friction_mode = FRICTION_ON;
-        break;
-    }
-    switch (rc_data.key_count[KEY_PRESS][Key_C] % 4) // C键设置底盘速度
-    {
-    case 0:
-        // chassis_cmd_send.chassis_speed_buff = 40;
-        // break;
-    case 1:
-        // chassis_cmd_send.chassis_speed_buff = 60;
-        break;
-    case 2:
-        // chassis_cmd_send.chassis_speed_buff = 80;
-        break;
-    default:
-        // chassis_cmd_send.chassis_speed_buff = 100;
-        break;
-    }
-    switch (rc_data.key[KEY_PRESS].shift) // 待添加 按shift允许超功率 消耗缓冲能量
-    {
-    case 1:
+    gimbal_cmd_send.gimbal_mode = GIMBAL_GYRO_MODE;
 
-        break;
+    // ========================================================
+    // 2. 鼠标控制云台 (鼠标位移增量直接叠加到目标角度)
+    // ========================================================
+    // 这里的 0.005f 是鼠标灵敏度，你需要根据上车后的实际手感去放大或缩小
+    gimbal_cmd_send.yaw += 0.005f * (float)vt03_info.parsed.mouse.x; 
+    gimbal_cmd_send.pitch += 0.005f * (float)vt03_info.parsed.mouse.y;
 
-    default:
+    // Pitch 轴软件限位
+    float pitch_max_limit = 11.f;
+    float pitch_min_limit = -18.f;
+    if (gimbal_cmd_send.pitch > pitch_max_limit) gimbal_cmd_send.pitch = pitch_max_limit;
+    else if (gimbal_cmd_send.pitch < pitch_min_limit) gimbal_cmd_send.pitch = pitch_min_limit;
 
-        break;
+
+    // ========================================================
+    // 3. 键盘按键边沿检测与状态切换
+    // ========================================================
+    static VT03_Key_t last_key = {0}; // 静态变量，记录上一帧的键盘状态
+    VT03_Key_t cur_key = vt03_info.parsed.key; // 获取当前键盘状态
+
+    // --- Z 键：切换弹速 (15 -> 18 -> 30) ---
+    static uint8_t speed_state = 0;
+    if (cur_key.z && !last_key.z) { // 检测到 Z 键刚被按下
+        speed_state = (speed_state + 1) % 3;
     }
+    if (speed_state == 0) shoot_cmd_send.bullet_speed = 15;
+    else if (speed_state == 1) shoot_cmd_send.bullet_speed = 18;
+    else shoot_cmd_send.bullet_speed = 30;
+
+    // --- E 键：切换发射模式 (停止 -> 单发 -> 3连发 -> 持续连发) ---
+    static uint8_t fire_mode = 0;
+    if (cur_key.e && !last_key.e) {
+        fire_mode = (fire_mode + 1) % 4;
+    }
+    if (fire_mode == 0) shoot_cmd_send.load_mode = LOAD_STOP;
+    else if (fire_mode == 1) shoot_cmd_send.load_mode = LOAD_1_BULLET;
+    else if (fire_mode == 2) shoot_cmd_send.load_mode = LOAD_3_BULLET;
+    else shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
+
+    // --- R 键：开关弹舱 ---
+    static uint8_t lid_state = 0;
+    if (cur_key.r && !last_key.r) {
+        lid_state = !lid_state;
+    }
+    shoot_cmd_send.lid_mode = lid_state ? LID_OPEN : LID_CLOSE;
+
+    // --- F 键：开关摩擦轮 ---
+    static uint8_t fric_state = 0;
+    if (cur_key.f && !last_key.f) {
+        fric_state = !fric_state;
+    }
+    shoot_cmd_send.friction_mode = fric_state ? FRICTION_ON : FRICTION_OFF;
+
+    // 更新历史按键状态，为下一帧做准备
+    last_key = cur_key;
+
+    // ========================================================
+    // 4. 鼠标左键发射逻辑
+    // ========================================================
+    // 如果按住了鼠标左键，强行覆盖 E 键的模式，开启最高射速连发
+    if (vt03_info.parsed.mouse.press_l) {
+        shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
+        shoot_cmd_send.shoot_rate = 25; 
+    } 
+    // 如果没按左键，但 E 键切到了持续连发模式，也维持连发
+    else if (fire_mode == 3) {
+        shoot_cmd_send.shoot_rate = 25;
+    } 
+    else {
+        shoot_cmd_send.shoot_rate = 0; // 单发或三连发由底层任务去控制拨弹电机步数
+    }
+
+    // 注意：底盘 WASD 的运动控制还没写，留到之后单独处理底盘时再补充！
 }
 
+
 /**
- * @brief  紧急停止与状态机守护
+ * @brief  紧急停止与状态机守护 (VT03版)
  */
 static void EmergencyHandler()
 {
-	static bool require_switch_cycle = false;
     // ========================================================
-    // 1. 最高优先级：致命错误检测 (掉线、急停拨轮打满)
+    // 1. 最高优先级：致命错误检测 (VT03 掉线保护)
     // ========================================================
-    if (remote_ctrl.rc_lost == true || rc_data.rc.dial > 300) 
+    if (vt03_info.is_lost == true) 
     {
-        robot_state = ROBOT_STOP; // 强制进入死锁状态
+        robot_state = ROBOT_STOP;   // 强制进入死锁状态
+        gimbal_enabled = false;     // 出于安全考虑，掉线后必须强制重置软开关为失能！
     }
     // ========================================================
-    // 2. 解锁机制：硬件安全的前提下，右开关打到【上】才能解锁
+    // 2. 解锁机制：重新连上后恢复到就绪状态
     // ========================================================
-if (robot_state == ROBOT_STOP && remote_ctrl.rc_lost == false && rc_data.rc.dial <= 300)
+    else if (robot_state == ROBOT_STOP && vt03_info.is_lost == false)
     {
-        // 如果用户把开关拨到了【中】或【下】，说明操作手有意识地动了开关，解除死锁标志
-        if (!switch_is_up(rc_data.rc.switch_right)) {
-            require_switch_cycle = false; 
-        }
-        
-        // 只有在死锁标志解除，且开关被切实打到【上】时，才真正解锁
-        if (require_switch_cycle == false && switch_is_up(rc_data.rc.switch_right)) {
-            robot_state = ROBOT_READY; 
-					  shoot_cmd_send.shoot_mode = SHOOT_ON;
-        }
+        robot_state = ROBOT_READY;  
+        shoot_cmd_send.shoot_mode = SHOOT_ON;
+        // 注意：恢复 READY 不代表云台马上有劲，必须等操作手再次按下 fn_1 才能使能
     }
 
+    // ========================================================
+    // 3. 死锁状态下的输出强制清零
+    // ========================================================
     if (robot_state == ROBOT_STOP)
     {
         gimbal_cmd_send.gimbal_mode = GIMBAL_ZERO_FORCE;
-        // chassis_cmd_send.chassis_mode = CHASSIS_ZERO_FORCE;
         
         shoot_cmd_send.shoot_mode = SHOOT_OFF;
-
+        shoot_cmd_send.friction_mode = FRICTION_OFF;
+        shoot_cmd_send.load_mode = LOAD_STOP;
+        shoot_cmd_send.shoot_rate = 0;
     }
 }
 
@@ -402,11 +365,18 @@ void Control_Task(void const * argument)
 	    // 根据gimbal的反馈值计算云台和底盘正方向的夹角,不需要传参,通过static私有变量完成
 	    CalcOffsetAngle();
 	    // 根据遥控器左侧开关,确定当前使用的控制模式为遥控器调试还是键鼠
-	    if (switch_is_down(rc_data.rc.switch_left) || switch_is_mid(rc_data.rc.switch_left)) // 遥控器左侧开关状态为[下],遥控器控制
-	        RemoteControlSet();
-	    else if (switch_is_up(rc_data.rc.switch_left)) // 遥控器左侧开关状态为[上],键盘控制
-	        MouseKeySet();
 
+// mode_sw 为 1 或 2 时，使用纯遥控器控制 (2为开摩擦轮状态)
+        if (vt03_info.parsed.rc.mode_sw == 1 || vt03_info.parsed.rc.mode_sw == 2)
+        {
+            RemoteControlSet();
+        }
+        // mode_sw 为 0 时，使用键鼠图传链路控制
+        else if (vt03_info.parsed.rc.mode_sw == 0)
+        {
+            MouseKeySet();
+        }
+		
 	    EmergencyHandler(); // 处理模块离线和遥控器急停等紧急情况
 
 
