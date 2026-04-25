@@ -1,4 +1,9 @@
 cod_h7_template/pid.o: ..\USER\Components\Controller\Src\PID.c \
   ..\USER\Components\Controller\Inc\PID.h \
   ..\USER\Application\Task\Inc\config.h \
+  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\stdint.h \
+  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\stdbool.h \
+  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\stdlib.h \
+  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\string.h \
+  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\math.h \
   ..\USER\Components\Algorithm\Inc\lpf.h
