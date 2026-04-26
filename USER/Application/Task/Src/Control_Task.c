@@ -145,7 +145,7 @@ static void RemoteControlSet()
     if (gimbal_enabled)
     {
         gimbal_cmd_send.gimbal_mode = GIMBAL_GYRO_MODE;
-
+				shoot_cmd_send.shoot_mode = SHOOT_ON;
         // 摇杆增量叠加 (系数 0.0002f 视底盘电机的实际灵敏度可调)
         // ch_3 控制 Yaw：负数向左，正数向右。(注：如果发现向左推摇杆云台却向右转，把这里的 += 改成 -= 即可)
         gimbal_cmd_send.yaw += 0.0002f * (float)vt03_info.parsed.rc.ch_3; 
@@ -169,6 +169,7 @@ static void RemoteControlSet()
     {
         // 软开关为 false 时，云台绝对脱力
         gimbal_cmd_send.gimbal_mode = GIMBAL_ZERO_FORCE;
+				shoot_cmd_send.shoot_mode = SHOOT_OFF;
     }
 
     // ========================================================
@@ -221,13 +222,14 @@ static void MouseKeySet()
     // 如果云台未使能，强制失能并退出计算
     if (!gimbal_enabled) {
         gimbal_cmd_send.gimbal_mode = GIMBAL_ZERO_FORCE;
+				shoot_cmd_send.shoot_mode = SHOOT_OFF;
         shoot_cmd_send.friction_mode = FRICTION_OFF;
         shoot_cmd_send.load_mode = LOAD_STOP;
         return; 
     }
 
     gimbal_cmd_send.gimbal_mode = GIMBAL_GYRO_MODE;
-
+		shoot_cmd_send.shoot_mode = SHOOT_ON;
     // ========================================================
     // 2. 鼠标控制云台 (鼠标位移增量直接叠加到目标角度)
     // ========================================================
