@@ -18,10 +18,10 @@
 #include <string.h> // 包含 memset
 
 
-// 【新增】定义最大支持的达妙电机数量
+//定义最大支持的达妙电机数量
 #define DM_MOTOR_CNT 10 
 
-// 【新增】达妙电机实例池与全局索引
+//达妙电机实例池与全局索引
 static DM_Motor_Info_Typedef *dm_motor_instance[DM_MOTOR_CNT] = {NULL}; 
 static uint8_t dm_idx = 0;
 
@@ -86,7 +86,14 @@ DM_Motor_Info_Typedef* DM_Motor_Init(DM_Motor_Init_Config_s *config)
     config->can_init_config.can_module_callback = DM_Motor_Decode; // 绑定解析回调
     
     instance->motor_can_instance = CANRegister(&config->can_init_config);
-
+// 【修复新增】将外部传入的反馈指针绑定到电机实例上
+    instance->angle_feedback_ptr = config->angle_feedback_ptr;
+    instance->speed_feedback_ptr = config->speed_feedback_ptr;
+    
+    // 【修复新增】调用 controller.c 的接口，初始化两个环的 PID 实例
+    PIDInit(&instance->angle_PID, &config->angle_pid_config);
+    PIDInit(&instance->speed_PID, &config->speed_pid_config);
+    // ========================================================
     // 4. 标记初始化完成
     instance->Data.Initlized = true;
 		
@@ -217,7 +224,7 @@ void DM_Motor_CAN_TxMessage(DM_Motor_Info_Typedef *DM_Motor, float Postion, floa
         uint8_t *Postion_Tmp  = (uint8_t*) & Postion;
         uint8_t *Velocity_Tmp = (uint8_t*) & Velocity;
         
-        // 【关键兼容】利用现成的 txconf 动态修改发送 ID
+        // 利用现成的 txconf 动态修改发送 ID
         instance->txconf.Identifier = DM_Motor->FDCANFrame.TxIdentifier + 0x100;
         
         tx_buff[0] = *(Postion_Tmp);
@@ -232,7 +239,7 @@ void DM_Motor_CAN_TxMessage(DM_Motor_Info_Typedef *DM_Motor, float Postion, floa
     } else if(DM_Motor->Control_Mode == VELOCITY) {
         uint8_t *Velocity_Tmp = (uint8_t*) & Velocity;
         
-        // 【关键兼容】利用现成的 txconf 动态修改发送 ID
+        // 利用现成的 txconf 动态修改发送 ID
         instance->txconf.Identifier = DM_Motor->FDCANFrame.TxIdentifier + 0x200;
         
         tx_buff[0] = *(Velocity_Tmp);
@@ -249,6 +256,97 @@ void DM_Motor_CAN_TxMessage(DM_Motor_Info_Typedef *DM_Motor, float Postion, floa
     CANTransmit(instance, 1);
 }
 
+float filtered_gyro = 0.0f;
+
+///**
+// * @brief  达妙电机 MIT 模式串级 PID 闭环计算
+// * @note   调用前请确保已正确绑定外部反馈指针(如 IMU)
+// * @param  motor        电机实例指针
+// * @param  target_angle 目标绝对角度 (单位需与 feedback 保持一致)
+// */
+//void DM_Motor_MIT_Calc(DM_Motor_Info_Typedef *motor, float target_angle)
+//{
+//    // 安全检查：指针必须非空，且当前必须是 MIT 模式
+//    if (motor == NULL || motor->Control_Mode != MIT) return;
+//    if (motor->angle_feedback_ptr == NULL || motor->speed_feedback_ptr == NULL) return;
+
+//    float alpha = 0.03f; 
+//    filtered_gyro = alpha * (*motor->speed_feedback_ptr) + (1.0f - alpha) * filtered_gyro;
+
+//		float target_speed = PIDCalculate(&motor->angle_PID, *(motor->angle_feedback_ptr), target_angle);
+//    float target_torque = PIDCalculate(&motor->speed_PID, filtered_gyro, target_speed);
+
+//	  target_torque = -target_torque;
+//    
+
+//    float final_torque = target_torque;// + gravity_torque;
+//    
+//    // 为了安全，最后做一道总限幅
+//    if(final_torque > 2.0f) final_torque = 2.0f;
+//    if(final_torque < -2.0f) final_torque = -2.0f;
+//	
+//    // 3. 将计算出的纯力矩赋值给底层发送缓存
+//    DM_Motor_Set_MIT_Target(motor, 0.0f, 0.0f, 0.0f, 0.0f, final_torque);
+//}
+
+
+
+/**
+ * @brief 达妙电机 MIT 模式终极闭环 (MCU双环前馈 + 达妙原生阻尼)
+ */
+void DM_Motor_MIT_Calc(DM_Motor_Info_Typedef *motor, float target_angle)
+{
+    if (motor == NULL || motor->Control_Mode != MIT) return;
+    if (motor->angle_feedback_ptr == NULL || motor->speed_feedback_ptr == NULL) return;
+
+    // ====================================================
+    // 1. MCU 角度环：算出期望速度 (deg/s)
+    // ====================================================
+    float target_speed_deg = PIDCalculate(&motor->angle_PID, *(motor->angle_feedback_ptr), target_angle);
+
+    // ====================================================
+    // 2. MCU 速度环：算出期望力矩 (Nm) - 负责推平弹簧阻力
+    // ====================================================
+    float alpha = 0.03f; 
+    filtered_gyro = alpha * (*motor->speed_feedback_ptr) + (1.0f - alpha) * filtered_gyro;
+    float target_torque = PIDCalculate(&motor->speed_PID, *motor->speed_feedback_ptr, target_speed_deg);
+    
+    float final_torque = -target_torque; // 保持你之前的力矩方向符号不变
+    
+    // 总力矩限幅保护
+    if(final_torque > 2.0f) final_torque = 2.0f;
+    if(final_torque < -2.0f) final_torque = -2.0f;
+
+    // ====================================================
+    // 3. 达妙阻尼层转换：将期望速度转为底层单位 (rad/s)
+    // ====================================================
+    float target_speed_rad = target_speed_deg * 0.0174533f;
+    
+    // 保持方向一致（力矩加了负号，这里的期望速度也要加负号，以配合底层）
+    float final_target_speed_rad = -target_speed_rad;
+
+    // ====================================================
+    // 4. 终极指令下发：MCU前馈推土机 + 达妙原生避震器
+    // ====================================================
+    float native_kd = 0.3f; // 避震阻尼系数，0.1~0.3 左右，负责吸收震动
+
+    DM_Motor_Set_MIT_Target(motor, 
+                            0.0f,                   // P_des: 0
+                            final_target_speed_rad, // V_des: 期望速度 (rad/s)
+                            0.0f,                   // Kp: 0
+                            native_kd,              // Kd: 达妙原生阻尼 (液压避震)
+                            final_torque);          // T_ff: MCU算出的推土机力矩
+}
+
+
+
+
+void DM_Motor_Set_Target_Angle(DM_Motor_Info_Typedef *motor, float target_angle)
+{
+    if (motor != NULL) {
+        motor->Control_Info.Angle = target_angle; 
+    }
+}
 
 void DM_Motor_Set_MIT_Target(DM_Motor_Info_Typedef *motor, float pos, float vel, float kp, float kd, float torq)
 {
@@ -269,7 +367,7 @@ void DM_Motor_Set_PosVel_Target(DM_Motor_Info_Typedef *motor, float pos, float v
 
 
 /**
- * @brief  【新增】遍历所有达妙电机，统一发送控制帧
+ * @brief 遍历所有达妙电机，统一发送控制帧
  * @note   这个函数应该被放在 1kHz 的定时任务 (如 CAN_Task) 中循环调用
  */
 void DM_Motor_Control(void)
@@ -284,6 +382,12 @@ void DM_Motor_Control(void)
         // 安全检查：如果指针非空且已经初始化
         if (motor != NULL && motor->Data.Initlized == true && motor->Data.State == 1)
         {
+					// === 增加闭环计算入口 ===
+            if (motor->Control_Mode == MIT && motor->angle_feedback_ptr != NULL && motor->speed_feedback_ptr != NULL)
+            {
+                DM_Motor_MIT_Calc(motor, motor->Control_Info.Angle);
+            }
+            // =========================
             // 直接将该电机 Control_Info 中的参数喂给底层的 CAN 发送函数
             DM_Motor_CAN_TxMessage(motor, 
                                    motor->Control_Info.Position, 
@@ -296,7 +400,7 @@ void DM_Motor_Control(void)
 }
 
 /**
- * @brief  【新增】一键使能所有已注册的达妙电机
+ * @brief  一键使能所有已注册的达妙电机
  * @note   建议在所有电机 Init 完成后，在 Task 的进入循环前调用
  */
 void DM_Motor_Enable_All(void)
@@ -316,7 +420,7 @@ void DM_Motor_Enable_All(void)
 }
 
 /**
- * @brief  【新增】一键失能所有已注册的达妙电机 (为了代码的完整性和安全性)
+ * @brief  一键失能所有已注册的达妙电机 (为了代码的完整性和安全性)
  */
 void DM_Motor_Disable_All(void)
 {

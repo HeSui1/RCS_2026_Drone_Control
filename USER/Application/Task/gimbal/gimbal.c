@@ -56,9 +56,9 @@ void GimbalInit()
         },
         .controller_param_init_config = {
             .angle_PID = {
-                .Kp = 5, // 8
-                .Ki = 0.2,
-                .Kd = 0,
+                .Kp = 25, // 8
+                .Ki = 0,
+                .Kd = 0.05,
                 .DeadBand = 0.1,
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .IntegralLimit = 150,
@@ -66,8 +66,8 @@ void GimbalInit()
                 .MaxOut = 500,
             },
             .speed_PID = {
-                .Kp = 20,  // 50
-                .Ki = 200, // 200
+                .Kp = 100,  // 50
+                .Ki = 150, // 200
                 .Kd = 0,
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .IntegralLimit = 5000,
@@ -84,7 +84,7 @@ void GimbalInit()
             .speed_feedback_source = OTHER_FEED,
             .outer_loop_type = ANGLE_LOOP,
             .close_loop_type = ANGLE_LOOP | SPEED_LOOP,
-            .motor_reverse_flag = MOTOR_DIRECTION_REVERSE,
+            .motor_reverse_flag = MOTOR_DIRECTION_NORMAL,
 						.feedback_reverse_flag = FEEDBACK_DIRECTION_REVERSE,
 
         },
@@ -92,20 +92,82 @@ void GimbalInit()
 
     yaw_motor = DJIMotorInit(&yaw_config);
 				
+//		DM_Motor_Init_Config_s dm_pitch_config = {
+//						.motor_type = DM3507,
+//						.control_mode = POSITION_VELOCITY,         
+//						.can_init_config = {
+//								.can_handle = &hfdcan1,   
 
-		DM_Motor_Init_Config_s dm_pitch_config = {
-						.motor_type = DM3507,
-						.control_mode = POSITION_VELOCITY,         
-						.can_init_config = {
-								.can_handle = &hfdcan1,   
-
-								.tx_id = 0x02,            //CAN ID 
-								.rx_id = 0x02,            //Master ID 
-						}
+//								.tx_id = 0x02,            //CAN ID 
+//								.rx_id = 0x02,            //Master ID 
+//						}
 
 
-				};						
-				// 电机对total_angle闭环,上电时为零,会保持静止,收到遥控器数据再动		
+//				};						
+//				// 电机对total_angle闭环,上电时为零,会保持静止,收到遥控器数据再动		
+			// 替换为之前的 MIT 模式双环配置（完全使用你之前的安全参数）
+			DM_Motor_Init_Config_s dm_pitch_config = {
+					.motor_type = DM3507,
+					.control_mode = MIT,
+					.param_limits = {
+							.P_MAX = 12.566f, 
+							.V_MAX = 50.0f,   
+							.T_MAX = 2.0f,    
+					},
+					.can_init_config = {
+							.can_handle = &hfdcan1,   
+							.tx_id = 0x02,            
+							.rx_id = 0x02,            
+					},
+					// --- 绑定反馈来源 ---
+					.angle_feedback_ptr = &gimba_IMU_data->Pitch,
+					.speed_feedback_ptr = &gimba_IMU_data->Gyro[IMU_GYRO_INDEX_PITCH],
+					
+					// --- 填入原有的 PID 参数 ---
+//					.angle_pid_config = {
+//							.Kp = 25.0f, 
+//							.Ki = 0.3f,
+//							.Kd = 0.5f, 
+//							.MaxOut = 150.0f, 
+//							.Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
+//							.IntegralLimit = 20,
+//							.DeadBand = 0.1,
+//					},
+//					.speed_pid_config = {
+//							.Kp = 0.011f, 
+//							.Ki = 0.05f,  
+//							.Kd = 0.0f,
+//							.MaxOut = 2.0f, 
+//							.DeadBand = 0.0f,
+//							.IntegralLimit = 1.0f,
+//							.Improve = PID_Integral_Limit | PID_Trapezoid_Intergral,
+//							.CoefA = 5.0f, .CoefB = 1.0f, .Output_LPF_RC = 0.005f
+//					}
+
+
+
+					// --- 填入原有的 PID 参数 ---
+					.angle_pid_config = {
+							.Kp = 25.0f, 
+							.Ki = 0.0f,
+							.Kd = 0.5f, 
+							.MaxOut = 150.0f, 
+							.Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
+							.IntegralLimit = 20,
+							.DeadBand = 0.1,
+					},
+					.speed_pid_config = {
+							.Kp = 0.011f, 
+							.Ki = 0.05f,  
+							.Kd = 0.0f,
+							.MaxOut = 2.0f, 
+							.DeadBand = 0.1f,
+							.IntegralLimit = 3.f,
+							.Improve = PID_Integral_Limit | PID_ChangingIntegrationRate | PID_Trapezoid_Intergral,
+							.CoefA = 5.0f, .CoefB = 1.0f, .Output_LPF_RC = 0.005f
+					}
+
+			};	
 			pitch_dm_motor = DM_Motor_Init(&dm_pitch_config);
 				
 			gimbal_pub = PubRegister("gimbal_feed", sizeof(Gimbal_Upload_Data_s));
@@ -116,7 +178,8 @@ void GimbalInit()
 void GimbalTask()
 {
 		pitch_target_rad =pitch_dm_motor->Data.Position-(gimbal_cmd_recv.pitch * -0.0174533f-gimba_IMU_data->Pitch * 0.0174533f);//gimbal_cmd_recv.pitch * 0.0174533f;// gimbal_cmd_recv.pitch * 0.0174533f  ;//-(gimba_IMU_data->Pitch * 0.0174533f-pitch_dm_motor->Data.Position);
-    // 获取云台控制数据
+  float pitch_target_deg = -gimbal_cmd_recv.pitch;  
+	// 获取云台控制数据
     // 后续增加未收到数据的处理
     SubGetMessage(gimbal_sub, &gimbal_cmd_recv);
 
@@ -146,8 +209,9 @@ void GimbalTask()
             DM_Motor_Command(pitch_dm_motor, Motor_Enable);
         } else {
 
-            DM_Motor_Set_PosVel_Target(pitch_dm_motor, pitch_target_rad, 0.5f);
-        }
+            //DM_Motor_Set_PosVel_Target(pitch_dm_motor, pitch_target_rad, 0.5f);
+						DM_Motor_Set_Target_Angle(pitch_dm_motor, pitch_target_deg);
+				}
         break;
 				
     // 云台自由模式,使用编码器反馈,底盘和云台分离,仅云台旋转,一般用于调整云台姿态(英雄吊射等)/能量机关
@@ -167,7 +231,8 @@ void GimbalTask()
             
             DM_Motor_Command(pitch_dm_motor, Motor_Enable);
         } else {
-            DM_Motor_Set_PosVel_Target(pitch_dm_motor, pitch_target_rad, 0.5f);
+            //DM_Motor_Set_PosVel_Target(pitch_dm_motor, pitch_target_rad, 0.5f);
+						DM_Motor_Set_Target_Angle(pitch_dm_motor, pitch_target_deg);
         }
 		
         break;

@@ -148,7 +148,7 @@ static void RemoteControlSet()
 				shoot_cmd_send.shoot_mode = SHOOT_ON;
         // 摇杆增量叠加 (系数 0.0002f 视底盘电机的实际灵敏度可调)
         // ch_3 控制 Yaw：负数向左，正数向右。(注：如果发现向左推摇杆云台却向右转，把这里的 += 改成 -= 即可)
-        gimbal_cmd_send.yaw += 0.0002f * (float)vt03_info.parsed.rc.ch_3; 
+        gimbal_cmd_send.yaw -= 0.0002f * (float)vt03_info.parsed.rc.ch_3; 
         
         // ch_1 控制 Pitch：正数向上，负数向下。
         gimbal_cmd_send.pitch += 0.0002f * (float)vt03_info.parsed.rc.ch_1;
@@ -234,7 +234,7 @@ static void MouseKeySet()
     // 2. 鼠标控制云台 (鼠标位移增量直接叠加到目标角度)
     // ========================================================
     // 这里的 0.005f 是鼠标灵敏度，你需要根据上车后的实际手感去放大或缩小
-    gimbal_cmd_send.yaw += 0.005f * (float)vt03_info.parsed.mouse.x; 
+    gimbal_cmd_send.yaw -= 0.005f * (float)vt03_info.parsed.mouse.x; 
     gimbal_cmd_send.pitch += 0.005f * (float)vt03_info.parsed.mouse.y;
 
     // Pitch 轴软件限位

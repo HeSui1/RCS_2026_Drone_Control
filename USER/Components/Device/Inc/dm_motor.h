@@ -13,6 +13,7 @@
 #include "stm32h723xx.h"
 #include "bsp_can.h"
 #include "motor_def.h"
+#include "controller.h"
 
 /**
  * @brief  typedef enum that control mode the type of DM_Motor.
@@ -84,6 +85,14 @@ typedef struct
     DM_Motor_Control_Mode_Type_e control_mode;     // 控制模式
     DM_Motor_Param_Range_Typedef param_limits;     // 硬件参数极限
     CAN_Init_Config_s can_init_config;             // 底层 CAN 配置
+	
+		// ======== 【新增】串级 PID 配置与反馈来源 ========
+    PID_Init_Config_s angle_pid_config; // 角度环配置
+    PID_Init_Config_s speed_pid_config; // 速度环配置
+    float *angle_feedback_ptr;          // 指向外部角度数据的指针 (如 IMU Pitch)
+    float *speed_feedback_ptr;          // 指向外部角速度数据的指针 (如 IMU Gyro)
+    // ==================================================
+	
 } DM_Motor_Init_Config_s;
 
 
@@ -114,13 +123,25 @@ typedef struct
 	
 	CANInstance *motor_can_instance;
 	DM_Motor_Control_Info_Typedef Control_Info;
+	
+	// ======== 【新增】运行时的 PID 实例与反馈指针 ========
+	PIDInstance angle_PID;     // 角度环实例
+	PIDInstance speed_PID;     // 速度环实例
+	float *angle_feedback_ptr; // 绑定的角度反馈源
+	float *speed_feedback_ptr; // 绑定的角速度反馈源
+	// =====================================================
+
+
 }DM_Motor_Info_Typedef;
 
+
+extern float filtered_gyro;
 
 
 /* Externs ------------------------------------------------------------------*/
 
-
+extern void DM_Motor_MIT_Calc(DM_Motor_Info_Typedef *motor, float target_angle);
+extern void DM_Motor_Set_Target_Angle(DM_Motor_Info_Typedef *motor, float target_angle);
 
 extern DM_Motor_Info_Typedef* DM_Motor_Init(DM_Motor_Init_Config_s *config);
 
