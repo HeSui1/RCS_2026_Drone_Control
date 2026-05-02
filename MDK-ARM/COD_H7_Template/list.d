@@ -1,5 +1,8 @@
 cod_h7_template/list.o: ..\Middlewares\Third_Party\FreeRTOS\Source\list.c \
+  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\stdlib.h \
   ..\Middlewares\Third_Party\FreeRTOS\Source\include\FreeRTOS.h \
+  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\stddef.h \
+  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\stdint.h \
   ..\Core\Inc\FreeRTOSConfig.h \
   ..\Middlewares\Third_Party\FreeRTOS\Source\include\projdefs.h \
   ..\Middlewares\Third_Party\FreeRTOS\Source\include\portable.h \

@@ -1,8 +1,0 @@
-//
-// Created by 34517 on 2026/4/25.
-//
-
-#ifndef COD_H7_TEMPLATE_LIGHT_H
-#define COD_H7_TEMPLATE_LIGHT_H
-
-#endif //COD_H7_TEMPLATE_LIGHT_H

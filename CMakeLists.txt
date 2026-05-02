@@ -39,8 +39,9 @@ add_executable(${CMAKE_PROJECT_NAME}
         USER/Components/Device/Src/dm_motor.c
         USER/Components/Device/Src/VT03.c
         USER/Components/Device/Inc/VT03.h
-        USER/Components/Device/Inc/light.h
-        USER/Components/Device/Src/light.c)
+        USER/Components/Device/Inc/ws2812b.h
+        USER/Components/Device/Src/ws2812b.c
+)
 
 # 添加 CubeMX 生成的源码 (此时它会继承上面的编译器参数)
 add_subdirectory(cmake/stm32cubemx)

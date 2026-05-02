@@ -1,6 +1,8 @@
 cod_h7_template/detect_task.o: ..\USER\Application\Task\Src\Detect_Task.c \
   ..\Middlewares\Third_Party\FreeRTOS\Source\CMSIS_RTOS\cmsis_os.h \
   ..\Middlewares\Third_Party\FreeRTOS\Source\include\FreeRTOS.h \
+  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\stddef.h \
+  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\stdint.h \
   ..\Core\Inc\FreeRTOSConfig.h \
   ..\Middlewares\Third_Party\FreeRTOS\Source\include\projdefs.h \
   ..\Middlewares\Third_Party\FreeRTOS\Source\include\portable.h \
@@ -15,14 +17,26 @@ cod_h7_template/detect_task.o: ..\USER\Application\Task\Src\Detect_Task.c \
   ..\Middlewares\Third_Party\FreeRTOS\Source\include\event_groups.h \
   ..\USER\Application\Task\Inc\Detect_Task.h \
   ..\USER\Application\Task\Inc\Control_Task.h \
-  ..\USER\Components\Device\Inc\Remote_Control_COD.h ..\Core\Inc\usart.h \
-  ..\Core\Inc\main.h ..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal.h \
+  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\stdbool.h \
+  ..\USER\Components\Device\Inc\Remote_Control_COD.h \
+  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\stdlib.h \
+  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\string.h \
+  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\math.h \
+  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\stdio.h \
+  ..\Core\Inc\usart.h ..\Core\Inc\main.h \
+  ..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal.h \
   ..\Core\Inc\stm32h7xx_hal_conf.h \
   ..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_rcc.h \
   ..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_def.h \
   ..\Drivers\CMSIS\Device\ST\STM32H7xx\Include\stm32h7xx.h \
   ..\Drivers\CMSIS\Device\ST\STM32H7xx\Include\stm32h723xx.h \
   ..\Drivers\CMSIS\Include\core_cm7.h \
+  ..\Drivers\CMSIS\Include\cmsis_version.h \
+  ..\Drivers\CMSIS\Include\cmsis_compiler.h \
+  ..\Drivers\CMSIS\Include\cmsis_armclang.h \
+  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\arm_compat.h \
+  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\arm_acle.h \
+  ..\Drivers\CMSIS\Include\mpu_armv7.h \
   ..\Drivers\CMSIS\Device\ST\STM32H7xx\Include\system_stm32h7xx.h \
   ..\Drivers\STM32H7xx_HAL_Driver\Inc\Legacy\stm32_hal_legacy.h \
   ..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_rcc_ex.h \

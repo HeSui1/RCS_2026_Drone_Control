@@ -1,5 +1,5 @@
-cod_h7_template/stm32h7xx_hal_timebase_tim.o: \
-  ..\Core\Src\stm32h7xx_hal_timebase_tim.c \
+cod_h7_template/ws2812b.o: ..\USER\Components\Device\Src\ws2812b.c \
+  ..\USER\Components\Device\Inc\ws2812b.h ..\Core\Inc\main.h \
   ..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal.h \
   ..\Core\Inc\stm32h7xx_hal_conf.h \
   ..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_rcc.h \
@@ -45,4 +45,5 @@ cod_h7_template/stm32h7xx_hal_timebase_tim.o: \
   ..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_uart_ex.h \
   ..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_pcd.h \
   ..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_ll_usb.h \
-  ..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_pcd_ex.h
+  ..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_pcd_ex.h \
+  ..\Core\Inc\tim.h

@@ -26,6 +26,9 @@
 #include "INS_Task.h"
 #include "robot_def.h"
 #include "MiniPC.h"
+
+#include "ws2812b.h"
+
 // 私有宏,自动将编码器转换成角度值
 #define YAW_ALIGN_ANGLE (YAW_CHASSIS_ALIGN_ECD * ECD_ANGLE_COEF_DJI) // 对齐时的角度,0-360
 #define PTICH_HORIZON_ANGLE (PITCH_HORIZON_ECD * ECD_ANGLE_COEF_DJI) // pitch水平时电机的角度,0-360
@@ -90,6 +93,13 @@ void RobotCMDInit()
 #endif // GIMBAL_BOARD
     gimbal_cmd_send.pitch = 0;
 
+		// 初始化 WS2812B
+    WS2812B_Init();
+		WS2812B_SetBrightness(10);//亮度更改入口
+    // 开机默认绿色，提示初始化成功
+    WS2812B_SetPixelColor(0, 0, 255, 0); 
+    WS2812B_Show();
+	
     robot_state = ROBOT_READY; // 启动时机器人进入工作模式,后续加入所有应用初始化完成之后再进入
 }
 
@@ -283,9 +293,73 @@ static void MouseKeySet()
     }
     shoot_cmd_send.friction_mode = fric_state ? FRICTION_ON : FRICTION_OFF;
 
-    // 更新历史按键状态，为下一帧做准备
+// ========================================================
+    // 3. 键盘按键边沿检测与状态切换 (WASD 飞手沟通灯语)
+    // ========================================================
+
+    // 计算灯带的中点
+    uint16_t mid_led = WS2812B_NUM_LEDS / 2;
+
+    // --- W 键：向上飞 (全亮青色/Cyan) ---
+    if (cur_key.w && !last_key.w) { 
+        for(uint16_t i = 0; i < WS2812B_NUM_LEDS; i++) {
+            WS2812B_SetPixelColor(i, 0, 255, 255); // 青色 (G=255, B=255)
+        }
+        WS2812B_Show();
+    }
+
+    // --- S 键：向下飞 (全亮橙黄色/Orange) ---
+    if (cur_key.s && !last_key.s) {
+        for(uint16_t i = 0; i < WS2812B_NUM_LEDS; i++) {
+            WS2812B_SetPixelColor(i, 255, 128, 0); // 橙黄色 (R=255, G=128, B=0)
+        }
+        WS2812B_Show();
+    }
+
+    // --- A 键：向左飞 (左半边亮紫色，右半边灭) ---
+    if (cur_key.a && !last_key.a) {
+        // 左半边亮紫色 (R=255, B=255)
+        for(uint16_t i = 0; i < mid_led; i++) {
+            WS2812B_SetPixelColor(i, 255, 0, 255); 
+        }
+        // 右半边熄灭 (制造方向感)
+        for(uint16_t i = mid_led; i < WS2812B_NUM_LEDS; i++) {
+            WS2812B_SetPixelColor(i, 0, 0, 0); 
+        }
+        WS2812B_Show();
+    }
+
+    // --- D 键：向右飞 (右半边亮绿色，左半边灭) ---
+    if (cur_key.d && !last_key.d) {
+        // 左半边熄灭
+        for(uint16_t i = 0; i < mid_led; i++) {
+            WS2812B_SetPixelColor(i, 0, 0, 0); 
+        }
+        // 右半边亮绿色 (G=255)
+        for(uint16_t i = mid_led; i < WS2812B_NUM_LEDS; i++) {
+            WS2812B_SetPixelColor(i, 0, 255, 0); 
+        }
+        WS2812B_Show();
+    }
+
+    // --- (可选) 松开所有按键时恢复待机颜色 (比如微弱的白光) ---
+    // 如果你想让提示只在按住时有效，松开就恢复，可以加一段按键释放检测
+    if (!cur_key.w && last_key.w || !cur_key.s && last_key.s || 
+        !cur_key.a && last_key.a || !cur_key.d && last_key.d) {
+        
+        // 检查是不是全都松开了
+        if(!cur_key.w && !cur_key.s && !cur_key.a && !cur_key.d) {
+            for(uint16_t i = 0; i < WS2812B_NUM_LEDS; i++) {
+                WS2812B_SetPixelColor(i, 10, 10, 10); // 微弱的白光代表待机
+            }
+            WS2812B_Show();
+        }
+    }
+
     last_key = cur_key;
 
+		
+		
     // ========================================================
     // 4. 鼠标左键发射逻辑
     // ========================================================

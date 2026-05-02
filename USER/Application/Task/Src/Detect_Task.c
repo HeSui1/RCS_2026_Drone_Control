@@ -20,6 +20,7 @@
 #include "bsp_gpio.h"
 #include "VT03.h"
 
+
 /**
   * @note turn on:  800
 	*       turn off: 4150
@@ -36,7 +37,7 @@ void Detect_Task(void const * argument)
 {
   /* USER CODE BEGIN Detect_Task */
 //  TickType_t systick = 0;
-	
+
 
   /* Infinite loop */
   for(;;)
@@ -44,6 +45,7 @@ void Detect_Task(void const * argument)
 
     Remote_Message_Moniter(&remote_ctrl); 
 		VT03_Monitor();
+
     osDelay(1);
   }
   /* USER CODE END Detect_Task */

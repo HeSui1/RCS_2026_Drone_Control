@@ -76,7 +76,7 @@ void MX_FREERTOS_Init(void);
   * @retval int
   */
 int main(void)
-	{
+{
 
   /* USER CODE BEGIN 1 */
 
@@ -130,6 +130,7 @@ int main(void)
   MX_FDCAN3_Init();
   MX_ADC3_Init();
   MX_ADC1_Init();
+  MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
 
 	
