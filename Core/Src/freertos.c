@@ -61,6 +61,9 @@ osThreadId Start_Detect_TaskHandle;
 uint32_t Start_Detect_TaskBuffer[ 1024 ];
 osStaticThreadDef_t Start_Detect_TaskControlBlock;
 osThreadId Start_RobotHandle;
+osThreadId Start_Referee_TaskHandle;
+uint32_t Start_Referee_Task_Buffer[ 1024 ];
+osStaticThreadDef_t Start_Referee_Task_ControlBlock;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -72,6 +75,7 @@ void Control_Task(void const * argument);
 void CAN_Task(void const * argument);
 void Detect_Task(void const * argument);
 void Robot_Task(void const * argument);
+void Referee_Task(void const * argument);
 
 extern void MX_USB_DEVICE_Init(void);
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
@@ -138,6 +142,10 @@ void MX_FREERTOS_Init(void) {
   /* definition and creation of Start_Robot */
   osThreadDef(Start_Robot, Robot_Task, osPriorityNormal, 0, 1024);
   Start_RobotHandle = osThreadCreate(osThread(Start_Robot), NULL);
+
+  /* definition and creation of Start_Referee_Task */
+  osThreadStaticDef(Start_Referee_Task, Referee_Task, osPriorityNormal, 0, 1024, Start_Referee_Task_Buffer, &Start_Referee_Task_ControlBlock);
+  Start_Referee_TaskHandle = osThreadCreate(osThread(Start_Referee_Task), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -236,6 +244,24 @@ __weak void Robot_Task(void const * argument)
     osDelay(1);
   }
   /* USER CODE END Robot_Task */
+}
+
+/* USER CODE BEGIN Header_Referee_Task */
+/**
+* @brief Function implementing the Start_Referee_Tsk thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_Referee_Task */
+__weak void Referee_Task(void const * argument)
+{
+  /* USER CODE BEGIN Referee_Task */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END Referee_Task */
 }
 
 /* Private application code --------------------------------------------------*/

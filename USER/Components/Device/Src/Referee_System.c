@@ -23,6 +23,9 @@
  */
 __attribute__((section (".AXI_SRAM"), aligned(32))) uint8_t Referee_System_Info_MultiRx_Buf[2][160];
 
+
+
+
 /**
  * @brief Referee structure variable
  */

@@ -3,21 +3,12 @@ cod_h7_template/bsp_uart.o: ..\USER\BSP\Src\bsp_uart.c \
   ..\Drivers\CMSIS\Device\ST\STM32H7xx\Include\stm32h7xx.h \
   ..\Drivers\CMSIS\Device\ST\STM32H7xx\Include\stm32h723xx.h \
   ..\Drivers\CMSIS\Include\core_cm7.h \
-  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\stdint.h \
-  ..\Drivers\CMSIS\Include\cmsis_version.h \
-  ..\Drivers\CMSIS\Include\cmsis_compiler.h \
-  ..\Drivers\CMSIS\Include\cmsis_armclang.h \
-  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\arm_compat.h \
-  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\arm_acle.h \
-  ..\Drivers\CMSIS\Include\mpu_armv7.h \
   ..\Drivers\CMSIS\Device\ST\STM32H7xx\Include\system_stm32h7xx.h \
   ..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal.h \
   ..\Core\Inc\stm32h7xx_hal_conf.h \
   ..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_rcc.h \
   ..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_def.h \
   ..\Drivers\STM32H7xx_HAL_Driver\Inc\Legacy\stm32_hal_legacy.h \
-  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\stddef.h \
-  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\math.h \
   ..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_rcc_ex.h \
   ..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_gpio.h \
   ..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_gpio_ex.h \
@@ -48,9 +39,21 @@ cod_h7_template/bsp_uart.o: ..\USER\BSP\Src\bsp_uart.c \
   ..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_pcd_ex.h \
   ..\Core\Inc\usart.h ..\Core\Inc\main.h \
   ..\USER\Components\Device\Inc\Remote_Control_COD.h \
-  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\stdbool.h \
-  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\stdlib.h \
-  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\string.h \
-  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\stdio.h \
   ..\USER\Components\Device\Inc\Referee_System.h \
-  ..\USER\Components\Device\Inc\VT03.h
+  ..\USER\Application\Task\Inc\robot_def.h \
+  ..\USER\Application\Task\Inc\ins_task.h \
+  ..\USER\Components\Device\Inc\VT03.h \
+  ..\Middlewares\Third_Party\FreeRTOS\Source\CMSIS_RTOS\cmsis_os.h \
+  ..\Middlewares\Third_Party\FreeRTOS\Source\include\FreeRTOS.h \
+  ..\Core\Inc\FreeRTOSConfig.h \
+  ..\Middlewares\Third_Party\FreeRTOS\Source\include\projdefs.h \
+  ..\Middlewares\Third_Party\FreeRTOS\Source\include\portable.h \
+  ..\Middlewares\Third_Party\FreeRTOS\Source\include\deprecated_definitions.h \
+  ..\Middlewares\Third_Party\FreeRTOS\Source\portable\GCC\ARM_CM4F\portmacro.h \
+  ..\Middlewares\Third_Party\FreeRTOS\Source\include\mpu_wrappers.h \
+  ..\Middlewares\Third_Party\FreeRTOS\Source\include\task.h \
+  ..\Middlewares\Third_Party\FreeRTOS\Source\include\list.h \
+  ..\Middlewares\Third_Party\FreeRTOS\Source\include\timers.h \
+  ..\Middlewares\Third_Party\FreeRTOS\Source\include\queue.h \
+  ..\Middlewares\Third_Party\FreeRTOS\Source\include\semphr.h \
+  ..\Middlewares\Third_Party\FreeRTOS\Source\include\event_groups.h

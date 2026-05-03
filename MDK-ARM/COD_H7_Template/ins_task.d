@@ -1,8 +1,6 @@
 cod_h7_template/ins_task.o: ..\USER\Application\Task\Src\INS_Task.c \
   ..\Middlewares\Third_Party\FreeRTOS\Source\CMSIS_RTOS\cmsis_os.h \
   ..\Middlewares\Third_Party\FreeRTOS\Source\include\FreeRTOS.h \
-  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\stddef.h \
-  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\stdint.h \
   ..\Core\Inc\FreeRTOSConfig.h \
   ..\Middlewares\Third_Party\FreeRTOS\Source\include\projdefs.h \
   ..\Middlewares\Third_Party\FreeRTOS\Source\include\portable.h \
@@ -18,12 +16,8 @@ cod_h7_template/ins_task.o: ..\USER\Application\Task\Src\INS_Task.c \
   ..\USER\Application\Task\Inc\INS_Task.h \
   ..\USER\Components\Device\Inc\bmi088.h \
   ..\USER\Components\Device\Inc\bmi088_reg.h \
-  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\stdbool.h \
   ..\USER\Components\Algorithm\Inc\lpf.h \
   ..\USER\Application\Task\Inc\config.h \
-  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\stdlib.h \
-  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\string.h \
-  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\math.h \
   ..\USER\Components\Controller\Inc\pid.h ..\Core\Inc\tim.h \
   ..\Core\Inc\main.h ..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal.h \
   ..\Core\Inc\stm32h7xx_hal_conf.h \
@@ -32,12 +26,6 @@ cod_h7_template/ins_task.o: ..\USER\Application\Task\Src\INS_Task.c \
   ..\Drivers\CMSIS\Device\ST\STM32H7xx\Include\stm32h7xx.h \
   ..\Drivers\CMSIS\Device\ST\STM32H7xx\Include\stm32h723xx.h \
   ..\Drivers\CMSIS\Include\core_cm7.h \
-  ..\Drivers\CMSIS\Include\cmsis_version.h \
-  ..\Drivers\CMSIS\Include\cmsis_compiler.h \
-  ..\Drivers\CMSIS\Include\cmsis_armclang.h \
-  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\arm_compat.h \
-  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\arm_acle.h \
-  ..\Drivers\CMSIS\Include\mpu_armv7.h \
   ..\Drivers\CMSIS\Device\ST\STM32H7xx\Include\system_stm32h7xx.h \
   ..\Drivers\STM32H7xx_HAL_Driver\Inc\Legacy\stm32_hal_legacy.h \
   ..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_rcc_ex.h \
@@ -71,6 +59,5 @@ cod_h7_template/ins_task.o: ..\USER\Application\Task\Src\INS_Task.c \
   ..\USER\Components\Algorithm\Inc\Quaternion.h \
   ..\USER\Components\Algorithm\Inc\Kalman_Filter.h \
   ..\Middlewares\ST\ARM\DSP\Inc\arm_math.h \
-  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\float.h \
-  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\limits.h \
-  ..\USER\BSP\Inc\bsp_pwm.h ..\USER\BSP\Inc\bsp_uart.h
+  ..\Drivers\CMSIS\Include\cmsis_compiler.h ..\USER\BSP\Inc\bsp_pwm.h \
+  ..\USER\BSP\Inc\bsp_uart.h

@@ -10,14 +10,14 @@
       <TargetName>COD_H7_Template</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
-      <pArmCC>6230000::V6.23::ARMCLANG</pArmCC>
-      <pCCUsed>6230000::V6.23::ARMCLANG</pCCUsed>
+      <pArmCC>6220000::V6.22::ARMCLANG</pArmCC>
+      <pCCUsed>6220000::V6.22::ARMCLANG</pCCUsed>
       <uAC6>1</uAC6>
       <TargetOption>
         <TargetCommonOption>
           <Device>STM32H723VGTx</Device>
           <Vendor>STMicroelectronics</Vendor>
-          <PackID>Keil.STM32H7xx_DFP.4.1.3</PackID>
+          <PackID>Keil.STM32H7xx_DFP.4.0.0</PackID>
           <PackURL>https://www.keil.com/pack/</PackURL>
           <Cpu>IRAM(0x20000000-0x2001FFFF) IRAM2(0x24000000-0x2401FFFF) IROM(0x8000000-0x80FFFFF) CLOCK(12000000) FPU3(DFPU) CPUTYPE("Cortex-M7") ELITTLE TZ</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
@@ -396,14 +396,14 @@
               <FilePath>..\USER\Application\Task\Src\Control_Task.c</FilePath>
             </File>
             <File>
-              <FileName>Detect_Task.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\USER\Application\Task\Src\Detect_Task.c</FilePath>
-            </File>
-            <File>
               <FileName>INS_Task.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\USER\Application\Task\Src\INS_Task.c</FilePath>
+            </File>
+            <File>
+              <FileName>Detect_Task.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\Application\Task\Src\Detect_Task.c</FilePath>
             </File>
             <File>
               <FileName>Robot_Task.c</FileName>
@@ -419,6 +419,11 @@
               <FileName>gimbal.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\USER\Application\Task\gimbal\gimbal.c</FilePath>
+            </File>
+            <File>
+              <FileName>Referee_Task.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\Application\Task\Src\Referee_Task.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -579,6 +584,11 @@
               <FileName>message_center.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\USER\Components\Message\message_center.c</FilePath>
+            </File>
+            <File>
+              <FileName>referee_UI.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\Components\Message\referee_UI.c</FilePath>
             </File>
           </Files>
         </Group>

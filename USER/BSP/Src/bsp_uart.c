@@ -17,6 +17,28 @@
 #include "Remote_Control_COD.h"
 #include "Referee_System.h"
 #include "VT03.h"
+#include "cmsis_os.h"
+
+/**
+ * @brief 裁判系统数据发送函数 (适配你的工程)
+ * @param send   要发送的数据首地址
+ * @param tx_len 发送长度
+ */
+void RefereeSend(uint8_t *send, uint16_t tx_len)
+{
+	/* 1. 使用 HAL 库的 DMA 发送函数替代原作者的面向对象 BSP */
+	// 注意：这里假设你连接电源管理模块/裁判系统的串口是 huart1
+	
+HAL_StatusTypeDef status = HAL_UART_Transmit(&huart1, send, tx_len, 1000);
+    
+    if (status != HAL_OK) {
+        __NOP(); // 断点
+    }
+	
+	/* 2. 保留原作者的延时逻辑，防止发包过快导致带宽超限或被服务器踢下线 */
+	osDelay(115);
+}
+
 
 
 void USART_Vofa_Justfloat_Transmit(float SendValue1,float SendValue2,float SendValue3){

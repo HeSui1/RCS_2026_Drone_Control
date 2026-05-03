@@ -216,11 +216,16 @@ static void RemoteControlSet()
     }
 }
 
+-float yaw_deg_vision = 0;
+float pitch_deg_vision = 0;
+
 /**
  * @brief VT03 专属键鼠控制逻辑 (图传链路)
  */
 static void MouseKeySet()
 {
+		yaw_deg_vision = vision_rx_data.yaw * 57.295779513f;
+	  pitch_deg_vision = -vision_rx_data.pitch * 57.295779513f;
     // ========================================================
     // 1. 软开关逻辑 (复用 fn_1 使能云台)
     // ========================================================
@@ -228,18 +233,40 @@ static void MouseKeySet()
         gimbal_enabled = !gimbal_enabled; 
     }
     last_fn_1_state = vt03_info.parsed.rc.fn_1;
-
+    // ========================================================
+    static VT03_Key_t last_key = {0}; // 静态变量，记录上一帧的键盘状态
+    VT03_Key_t cur_key = vt03_info.parsed.key; // 获取当前键盘状态
+		
     // 如果云台未使能，强制失能并退出计算
     if (!gimbal_enabled) {
         gimbal_cmd_send.gimbal_mode = GIMBAL_ZERO_FORCE;
 				shoot_cmd_send.shoot_mode = SHOOT_OFF;
         shoot_cmd_send.friction_mode = FRICTION_OFF;
         shoot_cmd_send.load_mode = LOAD_STOP;
+			
+			// 【必须加这一句】：即使不处理逻辑，也要把状态同步，防止解锁瞬间乱飞！
+        last_key = cur_key;
         return; 
     }
 
     gimbal_cmd_send.gimbal_mode = GIMBAL_GYRO_MODE;
 		shoot_cmd_send.shoot_mode = SHOOT_ON;
+		
+		
+
+		if (vt03_info.parsed.mouse.press_r) 
+    {		
+			
+			gimbal_cmd_send.yaw   = yaw_deg_vision;
+      gimbal_cmd_send.pitch = vision_rx_data.pitch * 57.295779513f;
+			float pitch_max_limit = 11.f;
+    float pitch_min_limit = -18.f;
+    if (gimbal_cmd_send.pitch > pitch_max_limit) gimbal_cmd_send.pitch = pitch_max_limit;
+    else if (gimbal_cmd_send.pitch < pitch_min_limit) gimbal_cmd_send.pitch = pitch_min_limit;
+
+			
+		}
+		else{
     // ========================================================
     // 2. 鼠标控制云台 (鼠标位移增量直接叠加到目标角度)
     // ========================================================
@@ -256,9 +283,7 @@ static void MouseKeySet()
 
     // ========================================================
     // 3. 键盘按键边沿检测与状态切换
-    // ========================================================
-    static VT03_Key_t last_key = {0}; // 静态变量，记录上一帧的键盘状态
-    VT03_Key_t cur_key = vt03_info.parsed.key; // 获取当前键盘状态
+
 
     // --- Z 键：切换弹速 (15 -> 18 -> 30) ---
     static uint8_t speed_state = 0;
@@ -292,69 +317,60 @@ static void MouseKeySet()
         fric_state = !fric_state;
     }
     shoot_cmd_send.friction_mode = fric_state ? FRICTION_ON : FRICTION_OFF;
+		
+
 
 // ========================================================
     // 3. 键盘按键边沿检测与状态切换 (WASD 飞手沟通灯语)
     // ========================================================
-
-    // 计算灯带的中点
     uint16_t mid_led = WS2812B_NUM_LEDS / 2;
+    bool led_need_update = false; // 【修复点2】：引入标志位，防止单周期多次刷灯
 
-    // --- W 键：向上飞 (全亮青色/Cyan) ---
+    // --- W 键：向上飞 ---
     if (cur_key.w && !last_key.w) { 
         for(uint16_t i = 0; i < WS2812B_NUM_LEDS; i++) {
-            WS2812B_SetPixelColor(i, 0, 255, 255); // 青色 (G=255, B=255)
+            WS2812B_SetPixelColor(i, 0, 255, 255);
         }
-        WS2812B_Show();
+        led_need_update = true;
     }
-
-    // --- S 键：向下飞 (全亮橙黄色/Orange) ---
-    if (cur_key.s && !last_key.s) {
+    // --- S 键：向下飞 ---
+    else if (cur_key.s && !last_key.s) { // 使用 else if 避免互斥按键冲突
         for(uint16_t i = 0; i < WS2812B_NUM_LEDS; i++) {
-            WS2812B_SetPixelColor(i, 255, 128, 0); // 橙黄色 (R=255, G=128, B=0)
+            WS2812B_SetPixelColor(i, 255, 128, 0); 
         }
-        WS2812B_Show();
+        led_need_update = true;
+    }
+    // --- A 键：向左飞 ---
+    else if (cur_key.a && !last_key.a) {
+        for(uint16_t i = 0; i < mid_led; i++) WS2812B_SetPixelColor(i, 255, 0, 255); 
+        for(uint16_t i = mid_led; i < WS2812B_NUM_LEDS; i++) WS2812B_SetPixelColor(i, 0, 0, 0); 
+        led_need_update = true;
+    }
+    // --- D 键：向右飞 ---
+    else if (cur_key.d && !last_key.d) {
+        for(uint16_t i = 0; i < mid_led; i++) WS2812B_SetPixelColor(i, 0, 0, 0); 
+        for(uint16_t i = mid_led; i < WS2812B_NUM_LEDS; i++) WS2812B_SetPixelColor(i, 0, 255, 0); 
+        led_need_update = true;
     }
 
-    // --- A 键：向左飞 (左半边亮紫色，右半边灭) ---
-    if (cur_key.a && !last_key.a) {
-        // 左半边亮紫色 (R=255, B=255)
-        for(uint16_t i = 0; i < mid_led; i++) {
-            WS2812B_SetPixelColor(i, 255, 0, 255); 
-        }
-        // 右半边熄灭 (制造方向感)
-        for(uint16_t i = mid_led; i < WS2812B_NUM_LEDS; i++) {
-            WS2812B_SetPixelColor(i, 0, 0, 0); 
-        }
-        WS2812B_Show();
-    }
-
-    // --- D 键：向右飞 (右半边亮绿色，左半边灭) ---
-    if (cur_key.d && !last_key.d) {
-        // 左半边熄灭
-        for(uint16_t i = 0; i < mid_led; i++) {
-            WS2812B_SetPixelColor(i, 0, 0, 0); 
-        }
-        // 右半边亮绿色 (G=255)
-        for(uint16_t i = mid_led; i < WS2812B_NUM_LEDS; i++) {
-            WS2812B_SetPixelColor(i, 0, 255, 0); 
-        }
-        WS2812B_Show();
-    }
-
-    // --- (可选) 松开所有按键时恢复待机颜色 (比如微弱的白光) ---
-    // 如果你想让提示只在按住时有效，松开就恢复，可以加一段按键释放检测
-    if (!cur_key.w && last_key.w || !cur_key.s && last_key.s || 
-        !cur_key.a && last_key.a || !cur_key.d && last_key.d) {
+    // --- 松开所有按键时恢复待机颜色 ---
+    // 【修复点4】：增加括号明确优先级
+    if ((!cur_key.w && last_key.w) || (!cur_key.s && last_key.s) || 
+        (!cur_key.a && last_key.a) || (!cur_key.d && last_key.d)) {
         
-        // 检查是不是全都松开了
         if(!cur_key.w && !cur_key.s && !cur_key.a && !cur_key.d) {
             for(uint16_t i = 0; i < WS2812B_NUM_LEDS; i++) {
-                WS2812B_SetPixelColor(i, 10, 10, 10); // 微弱的白光代表待机
+                WS2812B_SetPixelColor(i, 10, 10, 10); 
             }
-            WS2812B_Show();
+            led_need_update = true;
         }
     }
+
+    // 统一发送灯珠数据，单周期最多耗时一次！
+    if (led_need_update) {
+        WS2812B_Show();
+    }
+
 
     last_key = cur_key;
 
@@ -375,6 +391,7 @@ static void MouseKeySet()
     else {
         shoot_cmd_send.shoot_rate = 0; // 单发或三连发由底层任务去控制拨弹电机步数
     }
+	}
 
     // 注意：底盘 WASD 的运动控制还没写，留到之后单独处理底盘时再补充！
 }

@@ -41,6 +41,9 @@ add_executable(${CMAKE_PROJECT_NAME}
         USER/Components/Device/Inc/VT03.h
         USER/Components/Device/Inc/ws2812b.h
         USER/Components/Device/Src/ws2812b.c
+        USER/Application/Task/Inc/Referee_Task.h
+        USER/Application/Task/Src/Referee_Task.c
+        USER/Components/Message/referee_protocol.h
 )
 
 # 添加 CubeMX 生成的源码 (此时它会继承上面的编译器参数)

@@ -136,7 +136,7 @@ int main(void)
 	
   RobotInit();
   MCU_Init();
-
+	HAL_UART_Transmit(&huart1, (uint8_t *)"hello\r\n", 7, 1000);
 //	SEGGER_SYSVIEW_Conf();
 
  

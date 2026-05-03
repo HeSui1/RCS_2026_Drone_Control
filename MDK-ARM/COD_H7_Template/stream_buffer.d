@@ -1,9 +1,6 @@
 cod_h7_template/stream_buffer.o: \
   ..\Middlewares\Third_Party\FreeRTOS\Source\stream_buffer.c \
-  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\stdint.h \
-  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\string.h \
   ..\Middlewares\Third_Party\FreeRTOS\Source\include\FreeRTOS.h \
-  D:\Users\34517\AppData\Local\Keil_v5\ARM\ARMCLANG\bin\..\include\stddef.h \
   ..\Core\Inc\FreeRTOSConfig.h \
   ..\Middlewares\Third_Party\FreeRTOS\Source\include\projdefs.h \
   ..\Middlewares\Third_Party\FreeRTOS\Source\include\portable.h \

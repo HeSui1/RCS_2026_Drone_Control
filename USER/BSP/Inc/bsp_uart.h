@@ -21,6 +21,7 @@ extern "C" {
 
 /* Include------------------------------------------------------------------*/
 #include "stm32h7xx.h"
+66666666666666666666extern void RefereeSend(uint8_t *send, uint16_t tx_len);
 
 extern void BSP_USART_Init(void);
 	   		 

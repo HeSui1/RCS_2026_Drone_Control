@@ -19,7 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stdint.h"
 #include "stdbool.h"
-
+#include "robot_def.h"
 /* Exported defines ----------------------------------------------------------*/
 
 #define REFEREE_RXFRAME_LENGTH  136
@@ -67,6 +67,11 @@
 /**
  * @brief Robot id
  */
+
+/* 机器人阵营颜色宏定义 */
+#define Robot_Red  0
+#define Robot_Blue 1
+
 #define ROBOT_RED_HERO_ID                 0x0001U
 #define ROBOT_RED_ENGINEER_ID             0x0002U
 #define ROBOT_RED_3_INFANTEY_ID           0x0003U
@@ -115,7 +120,7 @@
 /**
  * @brief typedef structure that contains the information of frame header
  */
-typedef struct 
+typedef struct
 {
   uint8_t  SOF;           /*!< Data frame start byte, fixed value is 0xA5 */
   uint16_t Data_Length;   /*!< the length of data in the data frame */
@@ -127,7 +132,7 @@ typedef struct
 /**
  * @brief typedef structure that contains the information of game status, id: 0x0001U
  */
-typedef struct          
+typedef struct
 {
   /**
    * @brief the type of game,
@@ -137,11 +142,11 @@ typedef struct
             4:RMUL,3v3,
             5:RMUL,1v1,
    */
-	 uint8_t game_type : 4;        
+	 uint8_t game_type : 4;
 	 uint8_t game_progress : 4;	    /*!< the progress of game */
 	 uint16_t stage_remain_time;	    /*!< remain time of real progress */
    uint64_t SyncTimeStamp;         /*!< unix time */
-       
+
 }game_status_t;
 
 /**
@@ -167,7 +172,7 @@ typedef struct
   uint16_t red_2_robot_HP;   /*!< Red Engineer HP */
   uint16_t red_3_robot_HP;   /*!< Red 3 Infantry HP */
   uint16_t red_4_robot_HP;   /*!< Red 4 Infantry HP */
-  uint16_t red_reserved;          
+  uint16_t red_reserved;
   uint16_t red_7_robot_HP;   /*!< Red Sentry HP */
   uint16_t red_outpost_HP;   /*!< Red Outpost HP */
   uint16_t red_base_HP;      /*!< Red Base HP */
@@ -176,7 +181,7 @@ typedef struct
   uint16_t blue_2_robot_HP;   /*!< Blue Engineer HP */
   uint16_t blue_3_robot_HP;   /*!< Blue 3 Infantry HP */
   uint16_t blue_4_robot_HP;   /*!< Blue 4 Infantry HP */
-  uint16_t blue_reserved;  
+  uint16_t blue_reserved;
   uint16_t blue_7_robot_HP;   /*!< Blue Sentry HP */
   uint16_t blue_outpost_HP;   /*!< Blue Outpost HP */
   uint16_t blue_base_HP;      /*!< Blue Base HP */
@@ -193,20 +198,20 @@ typedef union
               bit 0:  Status of the supply zone that does not overlap with the exchange zone, 1 for occupied
               bit 1:  Status of the supply zone that overlaps with the exchange zone, 1 for occupied
               bit 2:  Status of the supply zone, 1 for occupied (applicable only to RMUL)
-	
+
 	            bits 3-5: Status of the energy mechanism:
               bit 3:    Status of the small energy mechanism, 1 for activated
               bit 4:    Status of the large energy mechanism, 1 for activated
               bit 5-6:  Status of the central highland, 1 for occupied by own side, 2 for occupied by the opponent
               bit 7-8:  Status of the trapezoidal highland, 1 for occupied
               bit 9-17: Time of the opponent's last dart hit on the own side's outpost or base (0-420, default is 0 at the start)
-	            bit 18-20:  Specific target of the opponent's last dart hit on the own side's outpost or base, default is 0 at the start, 
-	                        1 for hitting the outpost, 2 for hitting the fixed target on the base, 3 for hitting the random fixed target on the base, 
+	            bit 18-20:  Specific target of the opponent's last dart hit on the own side's outpost or base, default is 0 at the start,
+	                        1 for hitting the outpost, 2 for hitting the fixed target on the base, 3 for hitting the random fixed target on the base,
 	                        4 for hitting the random moving target on the base
-	            bit 21-22: Status of the central gain point, 0 for unoccupied, 1 for occupied by own side, 
-	                       2 for occupied by the opponent, 3 for occupied by both sides (applicable only to RMUL)               
+	            bit 21-22: Status of the central gain point, 0 for unoccupied, 1 for occupied by own side,
+	                       2 for occupied by the opponent, 3 for occupied by both sides (applicable only to RMUL)
               bit 23-31: Reserved
-                        
+
     */
     uint32_t  event_data;
 }event_data_t;
@@ -214,8 +219,8 @@ typedef union
 /**
  * @brief typedef structure that contains the warning  of Referee , id: 0x0104U
  */
-typedef struct 
-{ 
+typedef struct
+{
 	/**
    * @brief the type of game,
             1: Double Yellow Card,
@@ -224,27 +229,27 @@ typedef struct
             4:RMUL,3v3,
             5:RMUL,1v1,
    */
-  uint8_t level; 
-  uint8_t offending_robot_id; 
-  uint8_t count; 
-}referee_warning_t; 
+  uint8_t level;
+  uint8_t offending_robot_id;
+  uint8_t count;
+}referee_warning_t;
 
 /**
  * @brief typedef structure that contains the information of dart, id: 0x0105U
  */
 typedef  struct
 {
- 
+
  uint8_t dart_remaining_time;/* The remaining time for our side's dart launcher, in seconds.*/
- 
+
  uint16_t dart_info;
   /**
    * @brief dart_info
-   *       bit 0-2 The most recent target hit by our side's dart is defaulted to 0 at the start, 
-	                 where 1 indicates hitting the outpost, 2 indicates hitting the base's fixed target, 
+   *       bit 0-2 The most recent target hit by our side's dart is defaulted to 0 at the start,
+	                 where 1 indicates hitting the outpost, 2 indicates hitting the base's fixed target,
 	                 3 indicates hitting the base's random fixed target, and 4 indicates hitting the base's random moving target.
    *       bit 3-5 The cumulative hit count of the opponent's recently hit target (defaulting to 0 at the start, with a maximum of 4)
-   *       bit 6-7 The currently selected target for the dart (defaulting to 0 at the start or when not selected/selecting the outpost, 
+   *       bit 6-7 The currently selected target for the dart (defaulting to 0 at the start or when not selected/selecting the outpost,
 	                 1 for selecting the base's fixed target, 2 for selecting the base's random fixed target, 3 for selecting the base's random moving target)
    *       bit 8-15 Reserved
    */
@@ -345,10 +350,10 @@ typedef struct
  */
 typedef  struct
 {
-  uint8_t bullet_type;  
-  uint8_t shooter_number; 
-  uint8_t launching_frequency;  
-  float initial_speed;  
+  uint8_t bullet_type;
+  uint8_t shooter_number;
+  uint8_t launching_frequency;
+  float initial_speed;
 }shoot_data_t;
 
 /**
@@ -356,9 +361,9 @@ typedef  struct
  */
 typedef  struct
 {
-  uint16_t projectile_allowance_17mm; 
-  uint16_t projectile_allowance_42mm;  
-  uint16_t remaining_gold_coin; 
+  uint16_t projectile_allowance_17mm;
+  uint16_t projectile_allowance_42mm;
+  uint16_t remaining_gold_coin;
 }projectile_allowance_t;
 
 /**
@@ -400,7 +405,7 @@ typedef struct
  */
 typedef struct
 {
-  uint8_t mark_progress; 
+  uint8_t mark_progress;
 }radar_mark_data_t;
 
 /**
@@ -408,8 +413,8 @@ typedef struct
  */
 typedef  struct
 {
-  uint32_t sentry_info; 
-  uint16_t sentry_info_2; 
+  uint32_t sentry_info;
+  uint16_t sentry_info_2;
 } sentry_info_t;
 
 /**
@@ -422,7 +427,7 @@ typedef  struct
 /**
  * @brief typedef structure that contains the information of custom controller interactive, id: 0x0301U
  */
-typedef struct{ 
+typedef struct{
  uint16_t data_cmd_id;
  uint16_t sender_id;
  uint16_t receiver_id;
@@ -431,7 +436,7 @@ typedef struct{
 /**
  * @brief typedef structure that contains the information of custom controller interactive, id: 0x0302U
  */
-typedef struct 
+typedef struct
 {
   uint8_t data[30];
 } custom_robot_data_t;
@@ -493,14 +498,24 @@ typedef struct
   int8_t delta_y[49];
 }map_sentry_data_t;
 
+typedef struct
+{
+  uint8_t Robot_Color;        // 机器人颜色 (Robot_Red 或 Robot_Blue)
+  uint16_t Robot_ID;          // 本机器人ID (例如: ROBOT_RED_3_INFANTEY_ID)
+  uint16_t Cilent_ID;         // 本机器人对应的客户端ID (用于发UI)
+  uint16_t Receiver_Robot_ID; // 机器人车间通信时接收者的ID
+} referee_id_t;
+
 /**
  * @brief typedef structure that contains the information of Referee
  */
-typedef struct 
+typedef struct
 {
   uint8_t Index;
   uint16_t DataLength;
-  
+
+  referee_id_t referee_id;
+
 #ifdef GAME_STATUS_ID
   game_status_t game_status;
 #endif
@@ -511,8 +526,8 @@ typedef struct
 
 #ifdef  GAME_ROBOTHP_ID
 	game_robot_HP_t game_robot_HP;
-#endif	
-	
+#endif
+
 #ifdef EVENE_DATA_ID
   event_data_t event_data;
 #endif
@@ -562,7 +577,7 @@ typedef struct
 
 #ifdef GROUND_ROBOT_POSITION_ID
     ground_robot_position_t  ground_robot_position;
-#endif 
+#endif
 
 #ifdef RADAR_MARAKING_DATA_ID
     radar_mark_data_t  radar_mark_data;
@@ -575,7 +590,46 @@ typedef struct
 #ifdef RADAR_INFO_ID
     radar_info_t  radar_info;
 #endif
+
+  /* === 用于指示裁判系统底层是否已经就绪 === */
+  uint8_t init_flag;
 }Referee_System_Info_TypeDef;
+
+// 模式是否切换标志位，0为未切换，1为切换，static定义默认为0
+typedef struct
+{
+  uint32_t chassis_flag : 1;
+  uint32_t gimbal_flag : 1;
+  uint32_t shoot_flag : 1;
+  uint32_t lid_flag : 1;
+  uint32_t friction_flag : 1;
+  uint32_t Power_flag : 1;
+} Referee_Interactive_Flag_t;
+
+
+// 此结构体包含UI绘制与机器人车间通信的需要的其他非裁判系统数据
+typedef struct
+{
+  Referee_Interactive_Flag_t Referee_Interactive_Flag;
+  // 为UI绘制以及交互数据所用
+  chassis_mode_e chassis_mode;			 // 底盘模式
+  gimbal_mode_e gimbal_mode;				 // 云台模式
+  shoot_mode_e shoot_mode;				 // 发射模式设置
+  friction_mode_e friction_mode;			 // 摩擦轮关闭
+  lid_mode_e lid_mode;					 // 弹舱盖打开
+  Chassis_Power_Data_s Chassis_Power_Data; // 功率控制
+
+  // 上一次的模式，用于flag判断
+  chassis_mode_e chassis_last_mode;
+  gimbal_mode_e gimbal_last_mode;
+  shoot_mode_e shoot_last_mode;
+  friction_mode_e friction_last_mode;
+  lid_mode_e lid_last_mode;
+  Chassis_Power_Data_s Chassis_last_Power_Data;
+
+} Referee_Interactive_info_t;
+
+
 
 /* restore byte alignment */
 #pragma  pack()
@@ -595,5 +649,7 @@ extern Referee_System_Info_TypeDef Referee_System_Info;
 
 /* Exported functions prototypes ---------------------------------------------*/
 extern void Referee_System_Frame_Update(uint8_t *Buff);
+
+extern uint8_t UI_Seq;
 
 #endif //REFEREE_INFO_H
